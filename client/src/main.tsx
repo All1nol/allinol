@@ -5,7 +5,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import App from './App.tsx';
 import { AppProvider } from './context/AppContext.tsx';
 import { TaskProvider } from './context/TaskContext.tsx';
-import './index.css';
 
 // Create a client
 const queryClient = new QueryClient({

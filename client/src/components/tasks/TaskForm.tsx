@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Task } from '../../api/taskApi';
 import { useTaskManager } from '../../hooks/useTaskManager';
+import { Button } from '../ui/Button';
 
 interface TaskFormProps {
   task?: Task;
@@ -8,7 +9,7 @@ interface TaskFormProps {
 }
 
 export function TaskForm({ task, onClose }: TaskFormProps) {
-  const { createTask, updateTask, isCreating, isUpdating } = useTaskManager();
+  const { createTask, updateTask, deleteTask, isCreating, isUpdating, isDeleting } = useTaskManager();
   const isEditing = !!task;
 
   // Form state
@@ -51,6 +52,18 @@ export function TaskForm({ task, onClose }: TaskFormProps) {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value ? new Date(value) : undefined }));
   };
+
+  const handleDelete = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    const confirmed = window.confirm('Are you sure you want to delete this task?');
+    if (confirmed && task?._id) {
+      try {
+        await deleteTask(task._id);
+        onClose();
+      } catch (error) {
+        console.error('Failed to delete task:', error);
+      }
+    }
+  }
 
   // Handle tag input
   const handleTagInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -106,7 +119,7 @@ export function TaskForm({ task, onClose }: TaskFormProps) {
           value={formData.title}
           onChange={handleChange}
           required
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+          className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
         />
       </div>
 
@@ -121,7 +134,7 @@ export function TaskForm({ task, onClose }: TaskFormProps) {
           onChange={handleChange}
           required
           rows={3}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+          className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
         />
       </div>
 
@@ -135,7 +148,7 @@ export function TaskForm({ task, onClose }: TaskFormProps) {
             name="category"
             value={formData.category}
             onChange={handleChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+            className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
           >
             <option value="development">Development</option>
             <option value="design">Design</option>
@@ -154,7 +167,7 @@ export function TaskForm({ task, onClose }: TaskFormProps) {
             name="priority"
             value={formData.priority}
             onChange={handleChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+            className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
           >
             <option value="low">Low</option>
             <option value="medium">Medium</option>
@@ -174,7 +187,7 @@ export function TaskForm({ task, onClose }: TaskFormProps) {
             name="status"
             value={formData.status}
             onChange={handleChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+            className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
           >
             <option value="todo">To Do</option>
             <option value="in_progress">In Progress</option>
@@ -193,7 +206,7 @@ export function TaskForm({ task, onClose }: TaskFormProps) {
             name="dueDate"
             value={formData.dueDate ? new Date(formData.dueDate).toISOString().split('T')[0] : ''}
             onChange={handleDateChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+            className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
           />
         </div>
       </div>
@@ -208,16 +221,18 @@ export function TaskForm({ task, onClose }: TaskFormProps) {
             id="tags"
             value={tagInput}
             onChange={handleTagInputChange}
-            className="mt-1 block w-full rounded-l-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+            className="mt-1 block w-full rounded-l-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
             placeholder="Add a tag"
           />
-          <button
+          <Button
             type="button"
             onClick={addTag}
-            className="mt-1 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-r-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            variant="default"
+            size="default"
+            className="mt-1 rounded-l-none rounded-r-md"
           >
             Add
-          </button>
+          </Button>
         </div>
         {formData.tags && formData.tags.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-2">
@@ -241,17 +256,19 @@ export function TaskForm({ task, onClose }: TaskFormProps) {
       </div>
 
       <div className="flex justify-end space-x-3 pt-4">
-        <button
+        <Button
           type="button"
           onClick={onClose}
-          className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          variant="outline"
+          size="default"
         >
           Cancel
-        </button>
-        <button
+        </Button>
+        <Button
           type="submit"
           disabled={isCreating || isUpdating}
-          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+          variant="default"
+          size="default"
         >
           {isCreating || isUpdating ? (
             <>
@@ -264,7 +281,28 @@ export function TaskForm({ task, onClose }: TaskFormProps) {
           ) : (
             <>{isEditing ? 'Update Task' : 'Create Task'}</>
           )}
-        </button>
+        </Button>
+        {isEditing && (
+          <Button
+            type="button"
+            onClick={handleDelete}
+            variant="destructive"
+            size="default"
+            disabled={isDeleting}
+          >
+            {isDeleting ? (
+              <>
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Deleting...
+              </>
+            ) : (
+              'Delete Task'
+            )}
+          </Button>
+        )}
       </div>
     </form>
   );

@@ -1,6 +1,7 @@
 import { useTaskManager } from '../../hooks/useTaskManager';
 import { TaskCard } from './TaskCard';
 import { Task } from '../../api/taskApi';
+import { Button } from '../ui/Button';
 
 export function TaskList() {
   const {
@@ -46,12 +47,14 @@ export function TaskList() {
         {Object.keys(taskFilters).some(key => 
           key !== 'dateRange' && taskFilters[key as keyof typeof taskFilters]
         ) && (
-          <button
+          <Button
             onClick={clearTaskFilters}
-            className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            variant="default"
+            size="default"
+            className="mt-4"
           >
             Clear Filters
-          </button>
+          </Button>
         )}
       </div>
     );
@@ -68,7 +71,7 @@ export function TaskList() {
           <select
             value={taskSort.field as string}
             onChange={(e) => setTaskSort({ ...taskSort, field: e.target.value as keyof Task | 'none' })}
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+            className="block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
           >
             <option value="none">Sort by</option>
             <option value="title">Title</option>
@@ -81,7 +84,7 @@ export function TaskList() {
           <select
             value={taskSort.direction}
             onChange={(e) => setTaskSort({ ...taskSort, direction: e.target.value as 'asc' | 'desc' })}
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+            className="block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
           >
             <option value="asc">Ascending</option>
             <option value="desc">Descending</option>

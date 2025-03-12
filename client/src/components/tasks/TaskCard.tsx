@@ -34,7 +34,7 @@ export function TaskCard({ task, onClick }: TaskCardProps) {
     >
       <div className="flex justify-between items-start mb-2">
         <h3 className="font-medium text-lg text-gray-900 dark:text-gray-100">{task.title}</h3>
-        <div className={`px-2 py-1 rounded text-xs font-medium ${statusColors[task.status]}`}>
+        <div className={`px-2 py-1 rounded text-xs font-medium ${statusColors[task.status as keyof typeof statusColors]}`}>
           {task.status.replace('_', ' ')}
         </div>
       </div>
@@ -44,7 +44,7 @@ export function TaskCard({ task, onClick }: TaskCardProps) {
       </p>
       
       <div className="flex justify-between items-center">
-        <div className={`px-2 py-1 rounded text-xs font-medium ${priorityColors[task.priority]}`}>
+        <div className={`px-2 py-1 rounded text-xs font-medium ${priorityColors[task.priority as keyof typeof priorityColors]}`}>
           {task.priority}
         </div>
         
