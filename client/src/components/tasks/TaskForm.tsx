@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Task } from '../../api/taskApi';
 import { useTaskManager } from '../../hooks/useTaskManager';
-import { Button } from '../ui/Button';
 
 interface TaskFormProps {
   task?: Task;
@@ -107,9 +106,9 @@ export function TaskForm({ task, onClose }: TaskFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit}>
       <div>
-        <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label htmlFor="title">
           Title
         </label>
         <input
@@ -119,12 +118,11 @@ export function TaskForm({ task, onClose }: TaskFormProps) {
           value={formData.title}
           onChange={handleChange}
           required
-          className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
         />
       </div>
 
       <div>
-        <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label htmlFor="description">
           Description
         </label>
         <textarea
@@ -134,13 +132,12 @@ export function TaskForm({ task, onClose }: TaskFormProps) {
           onChange={handleChange}
           required
           rows={3}
-          className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
         />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label htmlFor="category" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          <label htmlFor="category">
             Category
           </label>
           <select
@@ -148,7 +145,6 @@ export function TaskForm({ task, onClose }: TaskFormProps) {
             name="category"
             value={formData.category}
             onChange={handleChange}
-            className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
           >
             <option value="development">Development</option>
             <option value="design">Design</option>
@@ -159,7 +155,7 @@ export function TaskForm({ task, onClose }: TaskFormProps) {
         </div>
 
         <div>
-          <label htmlFor="priority" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          <label htmlFor="priority">
             Priority
           </label>
           <select
@@ -167,7 +163,6 @@ export function TaskForm({ task, onClose }: TaskFormProps) {
             name="priority"
             value={formData.priority}
             onChange={handleChange}
-            className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
           >
             <option value="low">Low</option>
             <option value="medium">Medium</option>
@@ -179,7 +174,7 @@ export function TaskForm({ task, onClose }: TaskFormProps) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label htmlFor="status" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          <label htmlFor="status">
             Status
           </label>
           <select
@@ -187,7 +182,6 @@ export function TaskForm({ task, onClose }: TaskFormProps) {
             name="status"
             value={formData.status}
             onChange={handleChange}
-            className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
           >
             <option value="todo">To Do</option>
             <option value="in_progress">In Progress</option>
@@ -197,7 +191,7 @@ export function TaskForm({ task, onClose }: TaskFormProps) {
         </div>
 
         <div>
-          <label htmlFor="dueDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          <label htmlFor="dueDate">
             Due Date
           </label>
           <input
@@ -206,13 +200,12 @@ export function TaskForm({ task, onClose }: TaskFormProps) {
             name="dueDate"
             value={formData.dueDate ? new Date(formData.dueDate).toISOString().split('T')[0] : ''}
             onChange={handleDateChange}
-            className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
           />
         </div>
       </div>
 
       <div>
-        <label htmlFor="tags" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label htmlFor="tags">
           Tags
         </label>
         <div className="flex">
@@ -221,31 +214,25 @@ export function TaskForm({ task, onClose }: TaskFormProps) {
             id="tags"
             value={tagInput}
             onChange={handleTagInputChange}
-            className="mt-1 block w-full rounded-l-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
             placeholder="Add a tag"
           />
-          <Button
+          <button
             type="button"
             onClick={addTag}
-            variant="default"
-            size="default"
-            className="mt-1 rounded-l-none rounded-r-md"
           >
             Add
-          </Button>
+          </button>
         </div>
         {formData.tags && formData.tags.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-2">
             {formData.tags.map((tag, index) => (
               <span
                 key={index}
-                className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
               >
                 {tag}
                 <button
                   type="button"
                   onClick={() => removeTag(tag)}
-                  className="ml-1.5 inline-flex items-center justify-center h-4 w-4 rounded-full text-blue-400 hover:bg-blue-200 hover:text-blue-500 focus:outline-none"
                 >
                   &times;
                 </button>
@@ -256,19 +243,15 @@ export function TaskForm({ task, onClose }: TaskFormProps) {
       </div>
 
       <div className="flex justify-end space-x-3 pt-4">
-        <Button
+        <button
           type="button"
           onClick={onClose}
-          variant="outline"
-          size="default"
         >
           Cancel
-        </Button>
-        <Button
+        </button>
+        <button
           type="submit"
           disabled={isCreating || isUpdating}
-          variant="default"
-          size="default"
         >
           {isCreating || isUpdating ? (
             <>
@@ -281,13 +264,11 @@ export function TaskForm({ task, onClose }: TaskFormProps) {
           ) : (
             <>{isEditing ? 'Update Task' : 'Create Task'}</>
           )}
-        </Button>
+        </button>
         {isEditing && (
-          <Button
+          <button
             type="button"
             onClick={handleDelete}
-            variant="destructive"
-            size="default"
             disabled={isDeleting}
           >
             {isDeleting ? (
@@ -301,7 +282,7 @@ export function TaskForm({ task, onClose }: TaskFormProps) {
             ) : (
               'Delete Task'
             )}
-          </Button>
+          </button>
         )}
       </div>
     </form>

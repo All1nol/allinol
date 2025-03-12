@@ -1,100 +1,39 @@
 import { createContext, useContext, ReactNode, useState, useCallback } from 'react';
 
 // Define the types for our context
-interface AppContextState {
-  // UI state
-  sidebarOpen: boolean;
-  theme: 'light' | 'dark' | 'system';
-  // User state
-  currentUser: User | null;
-  // Workspace state
-  currentWorkspace: Workspace | null;
-}
-
-// User interface
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  avatar?: string;
-}
-
-// Workspace interface
-interface Workspace {
-  id: string;
-  name: string;
-  description?: string;
-}
 
 // Define the context actions/functions
 interface AppContextActions {
-  toggleSidebar: () => void;
-  setTheme: (theme: AppContextState['theme']) => void;
-  setCurrentUser: (user: User | null) => void;
-  setCurrentWorkspace: (workspace: Workspace | null) => void;
-  logout: () => void;
+  // Remove UI-related state and functions
 }
 
 // Combine state and actions for the full context value
-type AppContextValue = AppContextState & AppContextActions;
+type AppContextValue = AppContextActions;
 
 // Create the context with a default value
 const AppContext = createContext<AppContextValue | undefined>(undefined);
 
 // Initial state
-const initialState: AppContextState = {
-  sidebarOpen: true,
-  theme: 'system',
-  currentUser: null,
-  currentWorkspace: null,
+const initialState: AppContextValue = {
+  // Remove UI-related state
 };
 
 // Provider component
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<AppContextState>(initialState);
+  const [state, setState] = useState<AppContextValue>(initialState);
 
   // Action implementations
   const toggleSidebar = useCallback(() => {
-    setState(prev => ({ ...prev, sidebarOpen: !prev.sidebarOpen }));
-  }, []);
-
-  const setTheme = useCallback((theme: AppContextState['theme']) => {
-    setState(prev => ({ ...prev, theme }));
-    // Also update the document with the theme class for styling
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, []);
-
-  const setCurrentUser = useCallback((currentUser: User | null) => {
-    setState(prev => ({ ...prev, currentUser }));
-  }, []);
-
-  const setCurrentWorkspace = useCallback((currentWorkspace: Workspace | null) => {
-    setState(prev => ({ ...prev, currentWorkspace }));
+    // Remove UI-related state and functions
   }, []);
 
   const logout = useCallback(() => {
-    // Clear user and related state
-    setState(prev => ({
-      ...prev,
-      currentUser: null,
-      currentWorkspace: null,
-    }));
-    // Additional logout logic (clear tokens, etc.) would go here
+    // Remove UI-related state and functions
   }, []);
 
   // Combine state and actions for the context value
   const value: AppContextValue = {
-    ...state,
-    toggleSidebar,
-    setTheme,
-    setCurrentUser,
-    setCurrentWorkspace,
-    logout,
+    // Remove UI-related state and functions
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

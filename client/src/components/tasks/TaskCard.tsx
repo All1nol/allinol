@@ -29,17 +29,16 @@ export function TaskCard({ task, onClick }: TaskCardProps) {
 
   return (
     <div 
-      className="border rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer bg-white dark:bg-gray-800"
       onClick={onClick}
     >
       <div className="flex justify-between items-start mb-2">
-        <h3 className="font-medium text-lg text-gray-900 dark:text-gray-100">{task.title}</h3>
+        <h3 className="font-medium text-lg text-gray-900">{task.title}</h3>
         <div className={`px-2 py-1 rounded text-xs font-medium ${statusColors[task.status as keyof typeof statusColors]}`}>
           {task.status.replace('_', ' ')}
         </div>
       </div>
       
-      <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 line-clamp-2">
+      <p className="text-gray-600 text-sm mb-4 line-clamp-2">
         {task.description}
       </p>
       
@@ -48,7 +47,7 @@ export function TaskCard({ task, onClick }: TaskCardProps) {
           {task.priority}
         </div>
         
-        <div className="text-xs text-gray-500 dark:text-gray-400">
+        <div className="text-xs text-gray-500">
           Due: {formattedDate}
         </div>
       </div>
@@ -58,7 +57,7 @@ export function TaskCard({ task, onClick }: TaskCardProps) {
           {task.tags.map((tag, index) => (
             <span 
               key={index} 
-              className="bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 text-xs px-2 py-1 rounded"
+              className="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded"
             >
               {tag}
             </span>
