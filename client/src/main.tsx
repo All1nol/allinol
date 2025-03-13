@@ -6,6 +6,9 @@ import App from './App.tsx';
 import { AppProvider } from './context/AppContext.tsx';
 import { TaskProvider } from './context/TaskContext.tsx';
 
+// Import Tailwind CSS
+import './styles.css';
+
 // Create a client
 const queryClient = new QueryClient({
   defaultOptions: {
