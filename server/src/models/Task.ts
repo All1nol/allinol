@@ -97,11 +97,19 @@ const TaskSchema: Schema = new Schema(
     tags: [{
       type: String,
       trim: true
-    }]
+    }] 
   },
   {
     timestamps: true
   }
 );
+
+// Add indexes for frequently queried fields
+TaskSchema.index({ status: 1 }); // Index for status queries
+TaskSchema.index({ category: 1 }); // Index for category queries
+TaskSchema.index({ assignedTo: 1 }); // Index for user assignment queries
+TaskSchema.index({ projectId: 1 }); // Index for project queries
+TaskSchema.index({ createdAt: -1 }); // Index for sorting by creation date (descending)
+TaskSchema.index({ dueDate: 1 }); // Index for due date queries
 
 export default mongoose.model<ITask>('Task', TaskSchema); 

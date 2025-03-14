@@ -1,10 +1,11 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import mongoose from 'mongoose';
+import { connectDB, checkDBHealth, getDBStats } from './utils/database';
 
 // Import routes
 import taskRoutes from './routes/taskRoutes';
+import authRoutes from './routes/authRoutes';
 
 // Load environment variables
 dotenv.config();
@@ -19,23 +20,55 @@ app.use(express.json());
 
 // Routes
 app.use('/api/tasks', taskRoutes);
+app.use('/api/auth', authRoutes);
 
 // Default route
 app.get('/', (req, res) => {
   res.send('Allinol API is running');
 });
 
-// Connect to MongoDB
-const connectDB = async () => {
+// Add health check endpoint
+app.get('/health', async (req, res) => {
   try {
-    const conn = await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/allinol');
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
-  } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-    console.error(`Error: ${errorMessage}`);
-    process.exit(1);
+    const dbHealthy = await checkDBHealth();
+    
+    if (dbHealthy) {
+      res.json({ 
+        status: 'ok', 
+        service: 'Allinol API',
+        database: {
+          status: 'connected',
+          healthy: true
+        }
+      });
+    } else {
+      res.status(500).json({ 
+        status: 'error', 
+        service: 'Allinol API',
+        database: {
+          status: 'disconnected',
+          healthy: false
+        }
+      });
+    }
+  } catch (error) {
+    res.status(500).json({ 
+      status: 'error', 
+      service: 'Allinol API',
+      message: 'Health check failed'
+    });
   }
-};
+});
+
+// Add database stats endpoint (admin only - should be protected in production)
+app.get('/api/admin/db-stats', async (req, res) => {
+  try {
+    const stats = await getDBStats();
+    res.json(stats);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to get database stats' });
+  }
+});
 
 // Start server
 connectDB().then(() => {
