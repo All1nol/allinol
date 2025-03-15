@@ -1,45 +1,37 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { Routes, Route } from 'react-router-dom';
+import { useEffect } from 'react';
+import Login from './pages/auth/Login';
+import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { TasksPage } from './pages/tasks/TasksPage';
-import { Header } from './components/layout/Header';
-import { Sidebar } from './components/layout/Sidebar';
+import Register from './pages/auth/Register';
+import { Layout } from './components/layout/Layout';
 
 function App() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
-
-  const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
-  };
-
-  // Apply theme class to document
+  // Initialize theme from localStorage or system preference on app load
   useEffect(() => {
-    if (theme === 'dark') {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+      document.documentElement.classList.toggle('dark', savedTheme === 'dark');
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
       document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'dark');
     }
-    localStorage.setItem('theme', theme);
-  }, [theme]);
+  }, []);
 
   return (
-    <div className="h-screen flex flex-col bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100">
-      <Header toggleSidebar={toggleSidebar} theme={theme} setTheme={setTheme} />
-      
-      <div className="flex flex-1 overflow-hidden">
-        <Sidebar sidebarOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
-        
-        {/* Main content */}
-        <main className="flex-1 overflow-y-auto">
-          <div className="h-full">
-            <Routes>
-              <Route path="/tasks" element={<TasksPage />} />
-              <Route path="/" element={<Navigate to="/tasks" replace />} />
-            </Routes>
-          </div>
-        </main>
-      </div>
-    </div>
+    <Routes>
+      {/* Public routes */}
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      {/* Protected routes */}
+      <Route element={<ProtectedRoute />}>
+        <Route element={<Layout />}>
+          <Route path="/" element={<TasksPage />} />
+          <Route path="/tasks" element={<TasksPage />} />
+          <Route path="/dashboard" element={<TasksPage />} />
+        </Route>
+      </Route>
+    </Routes>
   );
 }
 

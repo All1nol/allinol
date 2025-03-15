@@ -2,8 +2,6 @@ import { useState } from 'react';
 import { TaskList } from '../../components/tasks/TaskList';
 import { TaskForm } from '../../components/tasks/TaskForm';
 import { useTaskManager } from '../../hooks/useTaskManager';
-import { Task } from '../../api/taskApi';
-
 export function TasksPage() {
   const { selectedTask, selectTask } = useTaskManager();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -24,7 +22,7 @@ export function TasksPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Tasks</h1>
         <button
