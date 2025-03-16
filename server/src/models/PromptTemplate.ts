@@ -39,8 +39,6 @@ export interface IPromptTemplate extends Document {
   updatedAt: Date;
   currentVersion: number;
   versions: IPromptVersion[];
-  
-  getVersion(versionNumber?: number): IPromptVersion | null;
 }
 
 // Schema for version history
@@ -116,17 +114,6 @@ const PromptTemplateSchema: Schema = new Schema(
   }
 );
 
-// Method to get a specific version or the current version if no version number is provided
-PromptTemplateSchema.methods.getVersion = function(versionNumber?: number): IPromptVersion | null {
-  // If no version number is provided, use the current version
-  const targetVersion = versionNumber || this.currentVersion;
-  // USING RULE ImplicitAny
-  // Find the version in the versions array
-  const version = this.versions.find((v: IPromptVersion) => v.version === targetVersion);
-  
-  return version || null;
-};
-
 // Add indexes for frequently queried fields
 PromptTemplateSchema.index({ category: 1 }); // Index for category queries
 PromptTemplateSchema.index({ tags: 1 }); // Index for tag queries
@@ -134,4 +121,20 @@ PromptTemplateSchema.index({ createdBy: 1 }); // Index for user queries
 PromptTemplateSchema.index({ isActive: 1 }); // Index for active template queries
 PromptTemplateSchema.index({ 'versions.version': 1 }); // Index for version queries
 
-export default mongoose.model<IPromptTemplate>('PromptTemplate', PromptTemplateSchema); 
+// Create the model
+const PromptTemplateModel = mongoose.model<IPromptTemplate>('PromptTemplate', PromptTemplateSchema);
+
+// Function to get a specific version or the current version if no version number is provided
+export const getPromptVersion = (
+  promptTemplate: IPromptTemplate, 
+  versionNumber?: number
+): IPromptVersion | null => {
+  // If no version number is provided, use the current version
+  const targetVersion = versionNumber || promptTemplate.currentVersion;
+  // Find the version in the versions array
+  const version = promptTemplate.versions.find(v => v.version === targetVersion);
+  
+  return version || null;
+};
+
+export default PromptTemplateModel; 

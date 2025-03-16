@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
+import AIAssistant from '../ui/AIAssistant';
 
 export function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [theme, setTheme] = useState<string>('light');
+  const [aiAssistantMinimized, setAiAssistantMinimized] = useState(true);
 
   // Toggle sidebar
   const toggleSidebar = () => {
@@ -54,6 +56,12 @@ export function Layout() {
           onClick={toggleSidebar}
         />
       )}
+
+      {/* AI Assistant */}
+      <AIAssistant 
+        initialPrompt="Hello! I'm your AI assistant. How can I help you with your tasks today?"
+        minimized={aiAssistantMinimized}
+      />
     </div>
   );
 } 

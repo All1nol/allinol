@@ -5,6 +5,8 @@ import { TasksPage } from './pages/tasks/TasksPage';
 import Register from './pages/auth/Register';
 import { Layout } from './components/layout/Layout';
 import PromptTemplates from './pages/admin/PromptTemplates';
+import AIChat from './pages/AIChat';
+import AIWorkflowPage from './pages/AIWorkflowPage';
 import { useAuth } from './context/AuthContext';
 import { UserRole } from './types/user';
 
@@ -36,6 +38,8 @@ function App() {
         <Route index element={<Navigate to="/tasks" />} />
         <Route path="tasks" element={<TasksPage />} />
         <Route path="tasks/:id" element={<TasksPage />} />
+        <Route path="ai-chat" element={<AIChat />} />
+        <Route path="ai-workflow" element={<AIWorkflowPage />} />
         
         {/* Admin routes */}
         <Route path="admin">

@@ -1,5 +1,6 @@
 import express from 'express';
 import { generateCompletion, generateEmbeddings } from '../controllers/llmController';
+import { getPromptVersion } from '../models/PromptTemplate';
 
 const router = express.Router();
 

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Task } from '../../api/taskApi';
 import { useTaskManager } from '../../hooks/useTaskManager';
 import { cn } from '../../utils/cn';
+import { llmService } from '../../services/llmService';
 
 interface TaskFormProps {
   task?: Task;
@@ -24,6 +25,12 @@ export function TaskForm({ task, onClose }: TaskFormProps) {
 
   // Tag input state
   const [tagInput, setTagInput] = useState('');
+  
+  // AI generation states
+  const [isGeneratingTask, setIsGeneratingTask] = useState(false);
+  const [isEnhancingDescription, setIsEnhancingDescription] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [showAiPromptInput, setShowAiPromptInput] = useState(false);
 
   // Initialize form with task data if editing
   useEffect(() => {
@@ -106,8 +113,157 @@ export function TaskForm({ task, onClose }: TaskFormProps) {
     }
   };
 
+  // AI-powered task generation from prompt
+  const generateTaskFromPrompt = async () => {
+    if (!aiPrompt.trim()) return;
+    
+    setIsGeneratingTask(true);
+    try {
+      const prompt = `Create a detailed task based on this request: "${aiPrompt}". 
+      Return a JSON object with the following fields:
+      - title: A clear, concise title for the task
+      - description: A detailed description of what needs to be done
+      - category: One of [development, design, marketing, management, other]
+      - priority: One of [low, medium, high, urgent]
+      - tags: An array of relevant tags (max 5)`;
+      
+      const response = await llmService.generateCompletion(prompt, {
+        temperature: 0.7,
+        maxTokens: 500,
+      });
+      
+      try {
+        const generatedTask = JSON.parse(response.choices[0].message.content);
+        setFormData({
+          ...formData,
+          ...generatedTask,
+        });
+        setShowAiPromptInput(false);
+      } catch (error) {
+        console.error('Failed to parse AI response:', error);
+        // If parsing fails, at least use the response for the description
+        setFormData(prev => ({
+          ...prev,
+          description: response.choices[0].message.content,
+        }));
+      }
+    } catch (error) {
+      console.error('Failed to generate task:', error);
+    } finally {
+      setIsGeneratingTask(false);
+    }
+  };
+
+  // AI-powered description enhancement
+  const enhanceDescription = async () => {
+    if (!formData.description) return;
+    
+    setIsEnhancingDescription(true);
+    try {
+      const prompt = `Enhance the following task description to make it more detailed, clear, and actionable:
+      "${formData.description}"
+      
+      Include specific steps, requirements, and expected outcomes. Make sure it's well-structured.`;
+      
+      const response = await llmService.generateCompletion(prompt, {
+        temperature: 0.7,
+        maxTokens: 500,
+      });
+      
+      setFormData(prev => ({
+        ...prev,
+        description: response.choices[0].message.content,
+      }));
+    } catch (error) {
+      console.error('Failed to enhance description:', error);
+    } finally {
+      setIsEnhancingDescription(false);
+    }
+  };
+
+  // AI-powered tag suggestion
+  const suggestTags = async () => {
+    if (!formData.title && !formData.description) return;
+    
+    try {
+      const prompt = `Based on the following task information, suggest up to 5 relevant tags (single words or short phrases):
+      Title: "${formData.title}"
+      Description: "${formData.description}"
+      
+      Return only an array of tags in JSON format.`;
+      
+      const response = await llmService.generateCompletion(prompt, {
+        temperature: 0.7,
+        maxTokens: 200,
+      });
+      
+      try {
+        const suggestedTags = JSON.parse(response.choices[0].message.content);
+        if (Array.isArray(suggestedTags)) {
+          const newTags = suggestedTags.filter(
+            tag => !formData.tags?.includes(tag)
+          );
+          
+          setFormData(prev => ({
+            ...prev,
+            tags: [...(prev.tags || []), ...newTags],
+          }));
+        }
+      } catch (error) {
+        console.error('Failed to parse AI tag suggestions:', error);
+      }
+    } catch (error) {
+      console.error('Failed to suggest tags:', error);
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {/* AI Task Generation */}
+      {!isEditing && (
+        <div className="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-4 mb-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-medium text-blue-800 dark:text-blue-300">AI-Powered Task Creation</h3>
+            <button
+              type="button"
+              onClick={() => setShowAiPromptInput(!showAiPromptInput)}
+              className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm"
+            >
+              {showAiPromptInput ? 'Hide' : 'Show'}
+            </button>
+          </div>
+          
+          {showAiPromptInput && (
+            <div className="mt-3 space-y-3">
+              <p className="text-xs text-blue-700 dark:text-blue-400">
+                Describe what you want to accomplish, and AI will create a task for you.
+              </p>
+              <div className="flex space-x-2">
+                <input
+                  type="text"
+                  value={aiPrompt}
+                  onChange={(e) => setAiPrompt(e.target.value)}
+                  placeholder="E.g., Create a marketing campaign for our new product launch"
+                  className="flex-1 rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                />
+                <button
+                  type="button"
+                  onClick={generateTaskFromPrompt}
+                  disabled={isGeneratingTask || !aiPrompt.trim()}
+                  className={`px-4 py-2 rounded-md ${
+                    isGeneratingTask || !aiPrompt.trim()
+                      ? 'bg-gray-400 cursor-not-allowed'
+                      : 'bg-blue-600 hover:bg-blue-700'
+                  } text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                >
+                  {isGeneratingTask ? 'Generating...' : 'Generate Task'}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="space-y-2">
         <label htmlFor="title" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
           Title
@@ -125,9 +281,23 @@ export function TaskForm({ task, onClose }: TaskFormProps) {
       </div>
 
       <div className="space-y-2">
-        <label htmlFor="description" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-          Description
-        </label>
+        <div className="flex justify-between items-center">
+          <label htmlFor="description" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+            Description
+          </label>
+          <button
+            type="button"
+            onClick={enhanceDescription}
+            disabled={isEnhancingDescription || !formData.description}
+            className={`text-xs px-2 py-1 rounded ${
+              isEnhancingDescription || !formData.description
+                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                : 'bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300'
+            }`}
+          >
+            {isEnhancingDescription ? 'Enhancing...' : 'Enhance with AI'}
+          </button>
+        </div>
         <textarea
           id="description"
           name="description"
@@ -214,9 +384,23 @@ export function TaskForm({ task, onClose }: TaskFormProps) {
       </div>
 
       <div className="space-y-2">
-        <label htmlFor="tags" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-          Tags
-        </label>
+        <div className="flex justify-between items-center">
+          <label htmlFor="tags" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+            Tags
+          </label>
+          <button
+            type="button"
+            onClick={suggestTags}
+            disabled={!formData.title && !formData.description}
+            className={`text-xs px-2 py-1 rounded ${
+              !formData.title && !formData.description
+                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                : 'bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300'
+            }`}
+          >
+            Suggest Tags
+          </button>
+        </div>
         <div className="flex space-x-2">
           <input
             type="text"
@@ -248,7 +432,9 @@ export function TaskForm({ task, onClose }: TaskFormProps) {
                   className="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full text-blue-400 hover:bg-blue-200 hover:text-blue-600 dark:hover:bg-blue-800 dark:hover:text-blue-200 focus:outline-none"
                 >
                   <span className="sr-only">Remove tag</span>
-                  &times;
+                  <svg className="h-2 w-2" stroke="currentColor" fill="none" viewBox="0 0 8 8">
+                    <path strokeLinecap="round" strokeWidth="1.5" d="M1 1l6 6m0-6L1 7" />
+                  </svg>
                 </button>
               </span>
             ))}
@@ -256,57 +442,33 @@ export function TaskForm({ task, onClose }: TaskFormProps) {
         )}
       </div>
 
-      <div className="flex justify-end space-x-3 pt-4 border-t border-slate-200 dark:border-slate-700">
-        <button
-          type="button"
-          onClick={onClose}
-          className="inline-flex items-center px-4 py-2 border border-slate-300 dark:border-slate-600 shadow-sm text-sm font-medium rounded-md text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-        >
-          Cancel
-        </button>
-        <button
-          type="submit"
-          disabled={isCreating || isUpdating}
-          className={cn(
-            "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500",
-            (isCreating || isUpdating) ? "opacity-70 cursor-not-allowed" : "hover:bg-blue-700"
-          )}
-        >
-          {isCreating || isUpdating ? (
-            <>
-              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              {isEditing ? 'Updating...' : 'Creating...'}
-            </>
-          ) : (
-            <>{isEditing ? 'Update Task' : 'Create Task'}</>
-          )}
-        </button>
+      <div className="flex justify-between pt-4">
         {isEditing && (
           <button
             type="button"
             onClick={handleDelete}
             disabled={isDeleting}
-            className={cn(
-              "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500",
-              isDeleting ? "opacity-70 cursor-not-allowed" : "hover:bg-red-700"
-            )}
+            className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isDeleting ? (
-              <>
-                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Deleting...
-              </>
-            ) : (
-              'Delete Task'
-            )}
+            {isDeleting ? 'Deleting...' : 'Delete'}
           </button>
         )}
+        <div className="flex space-x-3">
+          <button
+            type="button"
+            onClick={onClose}
+            className="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={isCreating || isUpdating}
+            className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isCreating ? 'Creating...' : isUpdating ? 'Updating...' : isEditing ? 'Update' : 'Create'}
+          </button>
+        </div>
       </div>
     </form>
   );
