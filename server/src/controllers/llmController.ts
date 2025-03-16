@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import groqService from '../services/groqService';
+import { generateCompletion as generateCompletionService, generateEmbeddings as generateEmbeddingsService } from '../services/groqService';
 
 /**
  * Generate a completion using the Groq API
@@ -15,7 +15,7 @@ export const generateCompletion = async (req: Request, res: Response): Promise<v
       return;
     }
 
-    const response = await groqService.generateCompletion(prompt, {
+    const response = await generateCompletionService(prompt, {
       model,
       maxTokens,
       temperature,
@@ -50,9 +50,9 @@ export const generateEmbeddings = async (req: Request, res: Response): Promise<v
       return;
     }
 
-    const response = await groqService.generateEmbeddings(input, model);
+    const response = await generateEmbeddingsService(input, model);
 
-    res.status(200).json(response);
+    res.status(200).json(response); 
   } catch (error) {
     if (error instanceof Error) {
       if (error.message.includes('Rate limit')) {
