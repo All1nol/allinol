@@ -5,6 +5,7 @@ import { TasksPage } from './pages/tasks/TasksPage';
 import Register from './pages/auth/Register';
 import { Layout } from './components/layout/Layout';
 import PromptTemplates from './pages/admin/PromptTemplates';
+import AdminPromptTemplates from './pages/admin/AdminPromptTemplates';
 import AIChat from './pages/AIChat';
 import AIWorkflowPage from './pages/AIWorkflowPage';
 import { useAuth } from './context/AuthContext';
@@ -44,6 +45,9 @@ function App() {
         {/* Admin routes */}
         <Route path="admin">
           <Route path="prompt-templates" element={
+            isAdmin ? <AdminPromptTemplates /> : <Navigate to="/tasks" />
+          } />
+          <Route path="api-prompt-templates" element={
             isAdmin ? <PromptTemplates /> : <Navigate to="/tasks" />
           } />
         </Route>

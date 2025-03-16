@@ -143,8 +143,12 @@ const Select: React.FC<SelectProps> = ({
 };
 
 export function TaskForm({ task, onClose }: TaskFormProps) {
-  const { createTask, updateTask, deleteTask, isCreating, isUpdating, isDeleting } = useTaskManager();
+  const { createTask, updateTask, deleteTask, isDeleting } = useTaskManager();
   const isEditing = !!task;
+
+  // Add view mode state
+  const [isViewMode, setIsViewMode] = React.useState(isEditing);
+  const [isEditMode, setIsEditMode] = React.useState(false);
 
   // AI enhancement states
   const [isEnhancingDescription, setIsEnhancingDescription] = React.useState(false);
@@ -331,138 +335,253 @@ export function TaskForm({ task, onClose }: TaskFormProps) {
     </Button>
   );
 
+  // Toggle between view and edit modes
+  const toggleEditMode = () => {
+    setIsViewMode(!isViewMode);
+    setIsEditMode(!isEditMode);
+  };
+
   return (
     <Modal
       isOpen={true}
       onClose={onClose}
-      title={isEditing ? 'Edit Task' : 'Create New Task'}
+      title={isEditing ? (isViewMode ? 'Task Details' : 'Edit Task') : 'Create New Task'}
       maxWidth="max-w-2xl"
     >
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* AI Task Generation */}
-        {!isEditing && (
-          <AITaskGenerator onTaskGenerated={handleAITaskGeneration} />
-        )}
+      {isViewMode && isEditing ? (
+        // View mode for task details
+        <div className="space-y-6">
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100">{values.title}</h3>
+              <div className="mt-4">
+                <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Description</h4>
+                <div className="bg-slate-50 dark:bg-slate-700/30 rounded-md p-4 whitespace-pre-wrap text-slate-800 dark:text-slate-200 text-sm max-h-[400px] overflow-y-auto">
+                  {values.description}
+                </div>
+              </div>
+            </div>
 
-        {submitError && (
-          <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-md">
-            {submitError}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+              <div>
+                <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Category</h4>
+                <p className="text-slate-800 dark:text-slate-200">
+                  {categoryOptions.find(option => option.value === values.category)?.label || values.category}
+                </p>
+              </div>
+              <div>
+                <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Priority</h4>
+                <p className="text-slate-800 dark:text-slate-200">
+                  {priorityOptions.find(option => option.value === values.priority)?.label || values.priority}
+                </p>
+              </div>
+              <div>
+                <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Status</h4>
+                <p className="text-slate-800 dark:text-slate-200">
+                  {statusOptions.find(option => option.value === values.status)?.label || values.status}
+                </p>
+              </div>
+              <div>
+                <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Due Date</h4>
+                <p className="text-slate-800 dark:text-slate-200">
+                  {values.dueDate ? new Date(values.dueDate).toLocaleDateString() : 'No due date'}
+                </p>
+              </div>
+            </div>
+
+            {values.tags && values.tags.length > 0 && (
+              <div className="mt-4">
+                <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Tags</h4>
+                <div className="flex flex-wrap gap-2">
+                  {values.tags.map((tag, index) => (
+                    <span 
+                      key={index} 
+                      className="bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs px-2.5 py-1 rounded-full"
+                    >
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
-        )}
 
-        {/* Basic Information */}
-        <div className="space-y-4">
-          <FormInput
-            id="title"
-            label="Title"
-            type="text"
-            value={values.title}
-            onChange={handleChange}
-            required
-            placeholder="Task title"
-            error={errors.title}
-          />
-
-          <TextArea
-            id="description"
-            label="Description"
-            value={values.description}
-            onChange={handleChange}
-            required
-            rows={3}
-            placeholder="Describe the task..."
-            error={errors.description}
-            actions={enhanceDescriptionButton}
-          />
-        </div>
-
-        {/* Task Classification */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Select
-            id="category"
-            label="Category"
-            value={values.category}
-            onChange={handleChange}
-            options={categoryOptions}
-            required
-            error={errors.category}
-          />
-
-          <Select
-            id="priority"
-            label="Priority"
-            value={values.priority}
-            onChange={handleChange}
-            options={priorityOptions}
-            required
-            error={errors.priority}
-          />
-        </div>
-
-        {/* Task Status and Due Date */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Select
-            id="status"
-            label="Status"
-            value={values.status}
-            onChange={handleChange}
-            options={statusOptions}
-            required
-            error={errors.status}
-          />
-
-          <div className="space-y-1">
-            <label htmlFor="dueDate" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-              Due Date
-            </label>
-            <input
-              type="date"
-              id="dueDate"
-              name="dueDate"
-              value={values.dueDate ? new Date(values.dueDate).toISOString().split('T')[0] : ''}
-              onChange={handleDateChange}
-              className="block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-            />
-          </div>
-        </div>
-
-        {/* Tags */}
-        <TagsInput 
-          tags={values.tags || []} 
-          onChange={handleTagsChange} 
-          onSuggestTags={suggestTags}
-          disabled={!values.title && !values.description}
-        />
-
-        {/* Form Actions */}
-        <div className="flex justify-between pt-4">
-          {isEditing && (
+          <div className="flex justify-between pt-4 border-t border-slate-200 dark:border-slate-700">
             <Button
+              type="button"
               variant="danger"
               onClick={handleDelete}
-              isLoading={isDeleting}
               disabled={isDeleting}
+              isLoading={isDeleting}
             >
               Delete
             </Button>
-          )}
-          <div className="flex space-x-3 ml-auto">
-            <Button
-              variant="outline"
-              onClick={onClose}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              isLoading={isSubmitting || isCreating || isUpdating}
-              disabled={isSubmitting || isCreating || isUpdating}
-            >
-              {isEditing ? 'Update' : 'Create'}
-            </Button>
+            <div className="flex space-x-2">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={onClose}
+              >
+                Close
+              </Button>
+              <Button
+                type="button"
+                onClick={toggleEditMode}
+              >
+                Edit
+              </Button>
+            </div>
           </div>
         </div>
-      </form>
+      ) : (
+        // Edit mode form
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* AI Task Generation */}
+          {!isEditing && (
+            <AITaskGenerator onTaskGenerated={handleAITaskGeneration} />
+          )}
+
+          {submitError && (
+            <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-md">
+              {submitError}
+            </div>
+          )}
+
+          {/* Basic Information */}
+          <div className="space-y-4">
+            <FormInput
+              id="title"
+              label="Title"
+              type="text"
+              value={values.title}
+              onChange={handleChange}
+              required
+              placeholder="Task title"
+              error={errors.title}
+            />
+
+            <TextArea
+              id="description"
+              label="Description"
+              value={values.description}
+              onChange={handleChange}
+              required
+              rows={6}
+              placeholder="Describe the task..."
+              error={errors.description}
+              actions={enhanceDescriptionButton}
+            />
+          </div>
+
+          {/* Task Classification */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Select
+              id="category"
+              label="Category"
+              value={values.category}
+              onChange={handleChange}
+              options={categoryOptions}
+              required
+              error={errors.category}
+            />
+
+            <Select
+              id="priority"
+              label="Priority"
+              value={values.priority}
+              onChange={handleChange}
+              options={priorityOptions}
+              required
+              error={errors.priority}
+            />
+          </div>
+
+          {/* Task Status and Due Date */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Select
+              id="status"
+              label="Status"
+              value={values.status}
+              onChange={handleChange}
+              options={statusOptions}
+              required
+              error={errors.status}
+            />
+
+            <div className="space-y-1">
+              <label htmlFor="dueDate" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                Due Date
+              </label>
+              <input
+                type="date"
+                id="dueDate"
+                name="dueDate"
+                value={values.dueDate ? new Date(values.dueDate).toISOString().split('T')[0] : ''}
+                onChange={handleDateChange}
+                className="block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+              />
+            </div>
+          </div>
+
+          {/* Tags */}
+          <TagsInput 
+            tags={values.tags || []} 
+            onChange={handleTagsChange} 
+            onSuggestTags={suggestTags}
+            disabled={!values.title && !values.description}
+          />
+
+          {/* Form Actions */}
+          <div className="flex justify-between pt-4 border-t border-slate-200 dark:border-slate-700">
+            {isEditing ? (
+              <>
+                <Button
+                  type="button"
+                  variant="danger"
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                  isLoading={isDeleting}
+                >
+                  Delete
+                </Button>
+                <div className="flex space-x-2">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={isEditMode ? toggleEditMode : onClose}
+                  >
+                    {isEditMode ? 'Cancel' : 'Close'}
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting}
+                    isLoading={isSubmitting}
+                  >
+                    Save Changes
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <div className="flex justify-end w-full space-x-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={onClose}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  isLoading={isSubmitting}
+                >
+                  Create Task
+                </Button>
+              </div>
+            )}
+          </div>
+        </form>
+      )}
     </Modal>
   );
 } 

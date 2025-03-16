@@ -15,7 +15,7 @@ const AIWorkflowPage: React.FC = () => {
   const [workflowDescription, setWorkflowDescription] = useState('');
   const [currentChallenges, setCurrentChallenges] = useState('');
   const [goals, setGoals] = useState('');
-  const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
+  const [_recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [generatedContent, setGeneratedContent] = useState('');
   const [activeTab, setActiveTab] = useState<'optimizer' | 'content'>('optimizer');
 

@@ -1,4 +1,4 @@
-import { createContext, useContext, ReactNode, useState, useCallback } from 'react';
+import { createContext, useContext, ReactNode, useState } from 'react';
 
 // Define the types for our context
 
@@ -20,16 +20,7 @@ const initialState: AppContextValue = {
 
 // Provider component
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<AppContextValue>(initialState);
-
-  // Action implementations
-  const toggleSidebar = useCallback(() => {
-    // Remove UI-related state and functions
-  }, []);
-
-  const logout = useCallback(() => {
-    // Remove UI-related state and functions
-  }, []);
+  const [_state, _setState] = useState<AppContextValue>(initialState);
 
   // Combine state and actions for the context value
   const value: AppContextValue = {

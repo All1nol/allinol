@@ -1,12 +1,13 @@
 import { useState, ChangeEvent } from 'react';
 
-interface FormErrors<T> {
+// Use a more generic approach without unused type parameters
+interface FormErrors {
   [key: string]: string;
 }
 
 interface UseFormProps<T> {
   initialValues: T;
-  validate?: (values: T) => FormErrors<T>;
+  validate?: (values: T) => FormErrors;
   onSubmit: (values: T) => void | Promise<void>;
 }
 
@@ -16,7 +17,7 @@ export function useForm<T extends Record<string, any>>({
   onSubmit,
 }: UseFormProps<T>) {
   const [values, setValues] = useState<T>(initialValues);
-  const [errors, setErrors] = useState<FormErrors<T>>({});
+  const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 

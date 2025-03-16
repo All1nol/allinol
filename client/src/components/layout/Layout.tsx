@@ -7,7 +7,7 @@ import AIAssistant from '../ui/AIAssistant';
 export function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [theme, setTheme] = useState<string>('light');
-  const [aiAssistantMinimized, setAiAssistantMinimized] = useState(true);
+  const [aiAssistantMinimized] = useState(true); //TODO setAiAssistantMinimized 
 
   // Toggle sidebar
   const toggleSidebar = () => {

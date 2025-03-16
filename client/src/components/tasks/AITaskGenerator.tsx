@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { llmService } from '../../services/llmService';
 import Button from '../ui/Button';
 import { Task } from '../../api/taskApi';
+import AdminPromptSelector from './AdminPromptSelector';
 
 interface AITaskGeneratorProps {
   onTaskGenerated: (task: Partial<Task>) => void;
@@ -24,7 +25,9 @@ const AITaskGenerator: React.FC<AITaskGeneratorProps> = ({ onTaskGenerated }) =>
       - description: A detailed description of what needs to be done
       - category: One of [development, design, marketing, management, other]
       - priority: One of [low, medium, high, urgent]
-      - tags: An array of relevant tags (max 5)`;
+      - tags: An array of relevant tags (max 5)
+      
+      IMPORTANT: Return ONLY the raw JSON object without any markdown formatting, code blocks, or additional text.`;
       
       const response = await llmService.generateCompletion(prompt, {
         temperature: 0.7,
@@ -32,7 +35,21 @@ const AITaskGenerator: React.FC<AITaskGeneratorProps> = ({ onTaskGenerated }) =>
       });
       
       try {
-        const generatedTask = JSON.parse(response.choices[0].message.content);
+        let contentToParse = response.choices[0].message.content;
+        
+        // Handle markdown code blocks if present
+        if (contentToParse.includes('```json')) {
+          // Extract JSON content from markdown code block
+          const jsonMatch = contentToParse.match(/```json\s*([\s\S]*?)\s*```/);
+          if (jsonMatch && jsonMatch[1]) {
+            contentToParse = jsonMatch[1];
+          }
+        }
+        
+        // Remove any BOM or invisible characters that might be present
+        contentToParse = contentToParse.trim();
+        
+        const generatedTask = JSON.parse(contentToParse);
         onTaskGenerated(generatedTask);
         setShowAiPromptInput(false);
       } catch (error) {
@@ -47,6 +64,12 @@ const AITaskGenerator: React.FC<AITaskGeneratorProps> = ({ onTaskGenerated }) =>
     } finally {
       setIsGeneratingTask(false);
     }
+  };
+
+  // Handle selecting a prompt from the admin templates
+  const handleSelectPrompt = (prompt: string) => {
+    setAiPrompt(prompt);
+    setShowAiPromptInput(true);
   };
 
   return (
@@ -67,6 +90,10 @@ const AITaskGenerator: React.FC<AITaskGeneratorProps> = ({ onTaskGenerated }) =>
           <p className="text-xs text-blue-700 dark:text-blue-400">
             Describe what you want to accomplish, and AI will create a task for you.
           </p>
+          
+          {/* Admin Prompt Templates Selector */}
+          <AdminPromptSelector onSelectPrompt={handleSelectPrompt} />
+          
           <div className="flex space-x-2">
             <input
               type="text"

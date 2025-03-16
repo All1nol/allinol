@@ -1,7 +1,6 @@
 import { useTaskManager } from '../../hooks/useTaskManager';
 import { TaskCard } from './TaskCard';
 import { Task } from '../../api/taskApi';
-import { cn } from '../../utils/cn';
 
 export function TaskList() {
   const {

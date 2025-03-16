@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { PromptCategory } from '../../types/promptTemplate';
 
@@ -62,7 +61,6 @@ interface PaginatedResponse {
 }
 
 const PromptTemplates: React.FC = () => {
-  const navigate = useNavigate();
   const [templates, setTemplates] = useState<PromptTemplate[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);

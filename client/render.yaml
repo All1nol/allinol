@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: allinol-client
+    env: static
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          name: allinol-api
+          type: web
+          envVarKey: RENDER_EXTERNAL_URL
+          append: /api
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html 
