@@ -18,8 +18,9 @@ const Login = () => {
         try {
             await login({ email, password });
             navigate('/tasks');
-        } catch (error) {
-            setError(error instanceof Error ? error.message : 'An error occurred');
+        } catch (error: any) {
+            const serverMessage = error.response?.data?.message;
+            setError(serverMessage || (error instanceof Error ? error.message : 'An error occurred'));
         } finally {
             setLoading(false);
         }
