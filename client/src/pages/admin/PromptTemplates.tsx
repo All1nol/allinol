@@ -8,6 +8,21 @@ import PromptTemplateForm from '../../components/admin/PromptTemplateForm';
 import PromptVersionForm from '../../components/admin/PromptVersionForm';
 import VersionPerformance from '../../components/admin/VersionPerformance';
 
+// Create a dedicated API instance with authentication
+const createAuthenticatedApi = () => {
+  const token = localStorage.getItem('token');
+  return axios.create({
+    baseURL: import.meta.env.VITE_API_URL,
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: token ? `Bearer ${token}` : '',
+    },
+  });
+};
+
+// Create the API instance
+const api = createAuthenticatedApi();
+
 interface PromptTemplate {
   _id: string;
   title: string;
@@ -63,11 +78,11 @@ const PromptTemplates: React.FC = () => {
 
   // Fetch prompt templates
   const fetchTemplates = async () => {
+    setLoading(true);
+    setError(null);
+    
     try {
-      setLoading(true);
-      setError(null);
-      
-      let url = `${import.meta.env.VITE_API_URL}/prompt-templates?page=${page}`;
+      let url = `/prompt-templates?page=${page}`;
       
       if (categoryFilter) {
         url += `&category=${categoryFilter}`;
@@ -78,7 +93,7 @@ const PromptTemplates: React.FC = () => {
         // For now, we'll just simulate it by filtering on the client
       }
       
-      const response = await axios.get<{ success: boolean; data: PaginatedResponse }>(url);
+      const response = await api.get<{ success: boolean; data: PaginatedResponse }>(url);
       
       if (response.data.success) {
         setTemplates(response.data.data.templates);
@@ -132,8 +147,8 @@ const PromptTemplates: React.FC = () => {
     if (selectedTemplate) {
       // Refetch the selected template to get the updated versions
       try {
-        const response = await axios.get<{ success: boolean; data: PromptTemplate }>(
-          `${import.meta.env.VITE_API_URL}/prompt-templates/${selectedTemplate._id}`
+        const response = await api.get<{ success: boolean; data: PromptTemplate }>(
+          `/prompt-templates/${selectedTemplate._id}`
         );
         
         if (response.data.success) {
@@ -159,8 +174,8 @@ const PromptTemplates: React.FC = () => {
     if (selectedTemplate) {
       // Refetch the selected template to get the updated performance metrics
       try {
-        const response = await axios.get<{ success: boolean; data: PromptTemplate }>(
-          `${import.meta.env.VITE_API_URL}/prompt-templates/${selectedTemplate._id}`
+        const response = await api.get<{ success: boolean; data: PromptTemplate }>(
+          `/prompt-templates/${selectedTemplate._id}`
         );
         
         if (response.data.success) {
@@ -177,8 +192,8 @@ const PromptTemplates: React.FC = () => {
   const handleDeleteTemplate = async (templateId: string) => {
     if (window.confirm('Are you sure you want to delete this template? This action cannot be undone.')) {
       try {
-        const response = await axios.delete(
-          `${import.meta.env.VITE_API_URL}/prompt-templates/${templateId}`
+        const response = await api.delete(
+          `/prompt-templates/${templateId}`
         );
         
         if (response.data.success) {
