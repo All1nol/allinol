@@ -1,0 +1,11 @@
+[33mcommit 4458fa8598e53e2fba94671908b77fad0a4ff2dc[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m
+Author: All1nol <newacckim@gmail.com>
+Date:   Sun Mar 16 14:30:55 2025 +0400
+
+    fix: add .env.production files to gitignore
+
+[33mcommit de44c453f83cd02b6cb562984fb543ef8c547604[m[33m ([m[1;31morigin/main[m[33m)[m
+Author: All1nol <newacckim@gmail.com>
+Date:   Sun Mar 16 14:25:32 2025 +0400
+
+    Add Render deployment configuration and fix TypeScript errors

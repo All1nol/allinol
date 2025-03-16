@@ -9,7 +9,7 @@
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
     "seed": "ts-node src/utils/seed.ts",
-    "clean": "rimraf dist",
+    "clean": "if [ -d dist ]; then rm -rf dist; fi || true",
     "prebuild": "npm run clean",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -28,6 +28,7 @@
     "groq-sdk": "^0.16.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.12.1",
+    "rimraf": "^6.0.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.2"
   },
@@ -37,7 +38,6 @@
     "@typescript-eslint/eslint-plugin": "^8.26.1",
     "@typescript-eslint/parser": "^8.26.1",
     "eslint": "^9.22.0",
-    "rimraf": "^6.0.1",
     "ts-node-dev": "^2.0.0"
   }
 }
