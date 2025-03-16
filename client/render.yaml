@@ -1,9 +1,9 @@
 services:
   - type: web
     name: allinol-client
-    env: node
+    env: static
     buildCommand: npm install && npm run build
-    startCommand: npm start
+    staticPublishPath: ./dist
     envVars:
       - key: VITE_API_URL
         fromService:
@@ -13,13 +13,13 @@ services:
           append: /api
     routes:
       - type: rewrite
-        source: /*
+        source: /
         destination: /index.html
       - type: rewrite
         source: /tasks
         destination: /index.html
       - type: rewrite
-        source: /tasks/*
+        source: /tasks/:id
         destination: /index.html
       - type: rewrite
         source: /ai-chat
@@ -28,5 +28,14 @@ services:
         source: /ai-workflow
         destination: /index.html
       - type: rewrite
-        source: /admin/*
+        source: /admin/prompt-templates
+        destination: /index.html
+      - type: rewrite
+        source: /admin/api-prompt-templates
+        destination: /index.html
+      - type: rewrite
+        source: /login
+        destination: /index.html
+      - type: rewrite
+        source: /register
         destination: /index.html 

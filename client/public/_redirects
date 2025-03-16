@@ -1,7 +1,16 @@
+# Redirects for SPA
+/                   /index.html   200
 /tasks              /index.html   200
-/tasks/*            /index.html   200
+/tasks/:id          /index.html   200
 /ai-chat            /index.html   200
 /ai-workflow        /index.html   200
-/admin/*            /index.html   200
+/admin/prompt-templates       /index.html   200
+/admin/api-prompt-templates   /index.html   200
+/login              /index.html   200
+/register           /index.html   200
+
+# API proxy
 /api/*              https://allinol-api.onrender.com/api/:splat  200
+
+# Fallback
 /*                  /index.html   200 
