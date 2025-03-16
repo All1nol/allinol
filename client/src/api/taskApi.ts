@@ -29,6 +29,20 @@ const taskApi = axios.create({
   },
 });
 
+// Add request interceptor to include auth token
+taskApi.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
 // API functions for tasks
 export const fetchTasks = async (): Promise<Task[]> => {
   const response = await taskApi.get('/');

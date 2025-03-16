@@ -7,6 +7,7 @@ import { connectDB, checkDBHealth, getDBStats } from './utils/database';
 import taskRoutes from './routes/taskRoutes';
 import authRoutes from './routes/authRoutes';
 import llmRoutes from './routes/llmRoutes';
+import promptTemplateRoutes from './routes/promptTemplateRoutes';
 
 // Load environment variables
 dotenv.config();
@@ -23,6 +24,7 @@ app.use(express.json());
 app.use('/api/tasks', taskRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/llm', llmRoutes);
+app.use('/api/prompt-templates', promptTemplateRoutes);
 
 // Default route
 app.get('/', (req, res) => {

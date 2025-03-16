@@ -53,7 +53,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             const response = await apiLogin(credentials);
             setUser(response);
             setIsAuthenticated(true);
-            navigate('/dashboard');
+            navigate('/tasks');
         } catch (error) {
             console.error('Login failed:', error);
             throw error;

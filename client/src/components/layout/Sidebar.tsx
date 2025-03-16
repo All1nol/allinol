@@ -1,5 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '../../utils/cn';
+import { useAuth } from '../../context/AuthContext';
+import { UserRole } from '../../types/user';
 
 interface SidebarProps {
   sidebarOpen: boolean;
@@ -8,6 +10,8 @@ interface SidebarProps {
 
 export function Sidebar({ sidebarOpen, toggleSidebar }: SidebarProps) {
   const location = useLocation();
+  const { user } = useAuth();
+  const isAdmin = user?.role === UserRole.ADMIN;
   
   // Navigation items
   const navItems = [
@@ -59,6 +63,28 @@ export function Sidebar({ sidebarOpen, toggleSidebar }: SidebarProps) {
     },
   ];
 
+  // Admin navigation items
+  const adminNavItems = [
+    {
+      name: 'Prompt Templates',
+      path: '/admin/prompt-templates',
+      icon: (
+        <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+        </svg>
+      ),
+    },
+    {
+      name: 'User Management',
+      path: '/admin/users',
+      icon: (
+        <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+        </svg>
+      ),
+    },
+  ];
+
   return (
     <aside 
       className={cn(
@@ -103,6 +129,42 @@ export function Sidebar({ sidebarOpen, toggleSidebar }: SidebarProps) {
               </Link>
             </li>
           ))}
+
+          {/* Admin Section */}
+          {isAdmin && (
+            <>
+              <li className="pt-5 pb-2">
+                <div className="px-3">
+                  <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider dark:text-slate-400">
+                    Admin
+                  </h3>
+                </div>
+              </li>
+              {adminNavItems.map((item) => (
+                <li key={item.path}>
+                  <Link 
+                    to={item.path}
+                    className={cn(
+                      "flex items-center px-3 py-2 text-sm font-medium rounded-md group transition-colors",
+                      location.pathname === item.path
+                        ? "bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-200"
+                        : "text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700/50"
+                    )}
+                  >
+                    <span className={cn(
+                      "mr-3",
+                      location.pathname === item.path
+                        ? "text-blue-500 dark:text-blue-400"
+                        : "text-slate-500 group-hover:text-slate-700 dark:text-slate-400 dark:group-hover:text-slate-300"
+                    )}>
+                      {item.icon}
+                    </span>
+                    {item.name}
+                  </Link>
+                </li>
+              ))}
+            </>
+          )}
         </ul>
       </nav>
       

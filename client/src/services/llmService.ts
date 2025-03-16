@@ -20,20 +20,27 @@ export const llmService = {
       maxTokens?: number;
       temperature?: number;
       topP?: number;
+      stop?: string[];
     } = {}
   ) => {
     try {
-      const response = await axios.post(`${API_URL}/llm/completion`, {
-        prompt,
-        ...options,
-      });
-      
+      const response = await axios.post(
+        `${API_URL}/llm/completion`,
+        {
+          prompt,
+          ...options,
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        }
+      );
       return response.data;
     } catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-        throw new Error(error.response.data.error || 'Failed to generate completion');
-      }
-      throw new Error('Failed to connect to the server');
+      console.error('Error generating completion:', error);
+      throw error;
     }
   },
 

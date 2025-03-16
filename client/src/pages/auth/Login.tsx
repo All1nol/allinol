@@ -17,7 +17,7 @@ const Login = () => {
         setLoading(true);
         try {
             await login({ email, password });
-            navigate('/dashboard');
+            navigate('/tasks');
         } catch (error) {
             setError(error instanceof Error ? error.message : 'An error occurred');
         } finally {

@@ -1,12 +1,17 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import Login from './pages/auth/Login';
-import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { TasksPage } from './pages/tasks/TasksPage';
 import Register from './pages/auth/Register';
 import { Layout } from './components/layout/Layout';
+import PromptTemplates from './pages/admin/PromptTemplates';
+import { useAuth } from './context/AuthContext';
+import { UserRole } from './types/user';
 
 function App() {
+  const { user, isAuthenticated } = useAuth();
+  const isAdmin = user?.role === UserRole.ADMIN;
+
   // Initialize theme from localStorage or system preference on app load
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme');
@@ -23,14 +28,25 @@ function App() {
       {/* Public routes */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      
       {/* Protected routes */}
-      <Route element={<ProtectedRoute />}>
-        <Route element={<Layout />}>
-          <Route path="/" element={<TasksPage />} />
-          <Route path="/tasks" element={<TasksPage />} />
-          <Route path="/dashboard" element={<TasksPage />} />
+      <Route path="/" element={
+        isAuthenticated ? <Layout /> : <Navigate to="/login" />
+      }>
+        <Route index element={<Navigate to="/tasks" />} />
+        <Route path="tasks" element={<TasksPage />} />
+        <Route path="tasks/:id" element={<TasksPage />} />
+        
+        {/* Admin routes */}
+        <Route path="admin">
+          <Route path="prompt-templates" element={
+            isAdmin ? <PromptTemplates /> : <Navigate to="/tasks" />
+          } />
         </Route>
       </Route>
+      
+      {/* Catch all */}
+      <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );
 }
