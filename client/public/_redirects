@@ -1,1 +1,7 @@
-/* /index.html 200 
+/tasks              /index.html   200
+/tasks/*            /index.html   200
+/ai-chat            /index.html   200
+/ai-workflow        /index.html   200
+/admin/*            /index.html   200
+/api/*              https://allinol-api.onrender.com/api/:splat  200
+/*                  /index.html   200 
