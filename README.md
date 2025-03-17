@@ -15,8 +15,10 @@ Allinol is a comprehensive business automation platform that centralizes company
 
 The project is divided into two main parts:
 
-- **Server**: Node.js + TypeScript backend with Express and MongoDB
-- **Client**: React + TypeScript frontend with Vite, TailwindCSS, and ShadCN
+Stack &Tech: 
+- FrontEnd: React 19 with Typescript, Vite 6, React Router, TailwindCss,Shadncn, Axios, React Query
+- Backend: Node.js with Typescript, Express.js, MongoDb, Grog 
+Deployment: Render
 
 ## Getting Started
 
