@@ -6,6 +6,7 @@ import App from './App.tsx';
 import { AppProvider } from './context/AppContext.tsx';
 import { TaskProvider } from './context/TaskContext.tsx';
 import { AuthProvider } from './context/AuthContext.tsx';
+import { ProjectProvider } from './context/ProjectContext.tsx';
 import './styles.css';
 
 // Create a client
@@ -25,9 +26,11 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       <BrowserRouter>
         <AuthProvider>
           <AppProvider>
-            <TaskProvider>
-              <App />
-            </TaskProvider>
+            <ProjectProvider>
+              <TaskProvider>
+                <App />
+              </TaskProvider>
+            </ProjectProvider>
           </AppProvider>
         </AuthProvider>
       </BrowserRouter>

@@ -8,6 +8,7 @@ import taskRoutes from './routes/taskRoutes';
 import authRoutes from './routes/authRoutes';
 import llmRoutes from './routes/llmRoutes';
 import promptTemplateRoutes from './routes/promptTemplateRoutes';
+import projectRoutes from './routes/projectRoutes';
 
 // Load environment variables
 dotenv.config();
@@ -25,6 +26,7 @@ app.use('/api/tasks', taskRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/llm', llmRoutes);
 app.use('/api/prompt-templates', promptTemplateRoutes);
+app.use('/api/projects', projectRoutes);
 
 // Default route
 app.get('/', (req, res) => {

@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import Login from './pages/auth/Login';
 import { TasksPage } from './pages/tasks/TasksPage';
+import { ProjectsPage } from './pages/projects/ProjectsPage';
 import Register from './pages/auth/Register';
 import { Layout } from './components/layout/Layout';
 import PromptTemplates from './pages/admin/PromptTemplates';
@@ -29,32 +30,42 @@ function App() {
   return (
     <Routes>
       {/* Public routes */}
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-      
+      <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to="/tasks" />} />
+      <Route path="/register" element={!isAuthenticated ? <Register /> : <Navigate to="/tasks" />} />
+
       {/* Protected routes */}
-      <Route path="/" element={
-        isAuthenticated ? <Layout /> : <Navigate to="/login" />
-      }>
-        <Route index element={<Navigate to="/tasks" />} />
-        <Route path="tasks" element={<TasksPage />} />
-        <Route path="tasks/:id" element={<TasksPage />} />
-        <Route path="ai-chat" element={<AIChat />} />
-        <Route path="ai-workflow" element={<AIWorkflowPage />} />
+      <Route element={<Layout />}>
+        {/* Redirect root to tasks */}
+        <Route path="/" element={<Navigate to="/tasks" />} />
         
+        {/* Main app routes */}
+        <Route
+          path="/tasks"
+          element={isAuthenticated ? <TasksPage /> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/projects"
+          element={isAuthenticated ? <ProjectsPage /> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/ai-chat"
+          element={isAuthenticated ? <AIChat /> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/ai-workflow"
+          element={isAuthenticated ? <AIWorkflowPage /> : <Navigate to="/login" />}
+        />
+
         {/* Admin routes */}
-        <Route path="admin">
-          <Route path="prompt-templates" element={
-            isAdmin ? <AdminPromptTemplates /> : <Navigate to="/tasks" />
-          } />
-          <Route path="api-prompt-templates" element={
-            isAdmin ? <PromptTemplates /> : <Navigate to="/tasks" />
-          } />
-        </Route>
+        <Route
+          path="/admin/prompt-templates"
+          element={isAuthenticated && isAdmin ? <AdminPromptTemplates /> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/prompt-templates"
+          element={isAuthenticated ? <PromptTemplates /> : <Navigate to="/login" />}
+        />
       </Route>
-      
-      {/* Catch all */}
-      <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );
 }

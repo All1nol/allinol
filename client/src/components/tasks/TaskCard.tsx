@@ -28,13 +28,26 @@ export function TaskCard({ task, onClick }: TaskCardProps) {
     ? new Date(task.dueDate).toLocaleDateString() 
     : 'No due date';
 
+  // Get project color if task has a project
+  const projectColor = task.project?.color || null;
+
   return (
     <div 
       onClick={onClick}
       className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-all duration-200 p-4 cursor-pointer"
+      style={projectColor ? { borderLeft: `4px solid ${projectColor}` } : undefined}
     >
       <div className="flex justify-between items-start mb-3">
-        <h3 className="font-medium text-lg text-slate-900 dark:text-slate-100">{task.title}</h3>
+        <div className="flex items-center">
+          {projectColor && (
+            <div 
+              className="w-3 h-3 rounded-full mr-2" 
+              style={{ backgroundColor: projectColor }}
+              title={task.project?.name || 'Project'}
+            ></div>
+          )}
+          <h3 className="font-medium text-lg text-slate-900 dark:text-slate-100">{task.title}</h3>
+        </div>
         <div className={cn("px-2.5 py-1 rounded-full text-xs font-medium", statusColors[task.status as keyof typeof statusColors])}>
           {task.status.replace('_', ' ')}
         </div>
@@ -56,6 +69,15 @@ export function TaskCard({ task, onClick }: TaskCardProps) {
           {formattedDate}
         </div>
       </div>
+      
+      {task.project && (
+        <div className="mt-3 text-xs text-slate-500 dark:text-slate-400 flex items-center">
+          <svg className="w-3.5 h-3.5 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+          </svg>
+          {task.project.name}
+        </div>
+      )}
       
       {task.tags && task.tags.length > 0 && (
         <div className="mt-4 flex flex-wrap gap-1.5">

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { Project } from './projectApi';
 
 // Define the base URL for API calls
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
@@ -19,6 +20,7 @@ export interface Task {
   tags?: string[];
   createdAt?: Date;
   updatedAt?: Date;
+  project?: Project; // For populated project data
 }
 
 // Create a dedicated API instance

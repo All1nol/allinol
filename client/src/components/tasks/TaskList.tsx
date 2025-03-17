@@ -1,6 +1,7 @@
 import { useTaskManager } from '../../hooks/useTaskManager';
 import { TaskCard } from './TaskCard';
 import { Task } from '../../api/taskApi';
+import { useState } from 'react';
 
 export function TaskList() {
   const {
@@ -13,6 +14,9 @@ export function TaskList() {
     taskSort,
     setTaskSort,
   } = useTaskManager();
+
+  // Add state for grouping by project
+  const [groupByProject, setGroupByProject] = useState(true);
 
   if (isLoading) {
     return (
@@ -36,33 +40,24 @@ export function TaskList() {
     );
   }
 
-  if (tasks.length === 0) {
-    return (
-      <div className="w-full p-8 text-center bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
-        <svg className="mx-auto h-12 w-12 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-        </svg>
-        <h3 className="mt-2 text-lg font-medium text-slate-900 dark:text-slate-100">No tasks found</h3>
-        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-          {Object.keys(taskFilters).some(key => 
-            key !== 'dateRange' && taskFilters[key as keyof typeof taskFilters]
-          ) 
-            ? 'Try clearing your filters or creating a new task.'
-            : 'Get started by creating your first task.'}
-        </p>
-        {Object.keys(taskFilters).some(key => 
-          key !== 'dateRange' && taskFilters[key as keyof typeof taskFilters]
-        ) && (
-          <button
-            onClick={clearTaskFilters}
-            type="button"
-            className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-          >
-            Clear Filters
-          </button>
-        )}
-      </div>
-    );
+  // Group tasks by project
+  const groupedTasks: Record<string, Task[]> = {};
+  
+  if (groupByProject) {
+    // Initialize with "No Project" group
+    groupedTasks['no-project'] = [];
+    
+    // Group tasks by project
+    tasks.forEach(task => {
+      if (task.projectId && task.project) {
+        if (!groupedTasks[task.projectId]) {
+          groupedTasks[task.projectId] = [];
+        }
+        groupedTasks[task.projectId].push(task);
+      } else {
+        groupedTasks['no-project'].push(task);
+      }
+    });
   }
 
   return (
@@ -94,18 +89,74 @@ export function TaskList() {
             <option value="asc">Ascending</option>
             <option value="desc">Descending</option>
           </select>
+          
+          <button
+            onClick={() => setGroupByProject(!groupByProject)}
+            className={`px-3 py-1.5 rounded-md text-sm font-medium ${
+              groupByProject 
+                ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100' 
+                : 'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-200'
+            }`}
+          >
+            {groupByProject ? 'Grouped by Project' : 'Flat View'}
+          </button>
         </div>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {tasks.map((task) => (
-          <TaskCard
-            key={task._id}
-            task={task}
-            onClick={() => selectTask(task._id!)}
-          />
-        ))}
-      </div>
+      {groupByProject ? (
+        // Grouped by project view
+        <div className="space-y-8">
+          {Object.entries(groupedTasks).map(([projectId, projectTasks]) => {
+            if (projectTasks.length === 0) return null;
+            
+            const projectName = projectId === 'no-project' 
+              ? 'No Project' 
+              : projectTasks[0].project?.name || 'Unknown Project';
+            
+            const projectColor = projectId === 'no-project'
+              ? '#808080'
+              : projectTasks[0].project?.color || '#808080';
+            
+            return (
+              <div key={projectId} className="space-y-4">
+                <div className="flex items-center">
+                  <div 
+                    className="w-3 h-3 rounded-full mr-2" 
+                    style={{ backgroundColor: projectColor }}
+                  ></div>
+                  <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100">
+                    {projectName}
+                  </h3>
+                  <span className="ml-2 text-sm text-slate-500 dark:text-slate-400">
+                    ({projectTasks.length})
+                  </span>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {projectTasks.map((task) => (
+                    <TaskCard
+                      key={task._id}
+                      task={task}
+                      onClick={() => selectTask(task._id!)}
+                    />
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        // Flat view (original)
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {tasks.map((task) => (
+            <TaskCard
+              key={task._id}
+              task={task}
+              onClick={() => selectTask(task._id!)}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 } 

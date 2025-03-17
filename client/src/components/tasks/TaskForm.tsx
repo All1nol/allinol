@@ -1,6 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Task } from '../../api/taskApi';
 import { useTaskManager } from '../../hooks/useTaskManager';
+import { useProjectManager } from '../../context/ProjectContext';
 import { llmService } from '../../services/llmService';
 import useForm from '../../hooks/useForm';
 import Button from '../ui/Button';
@@ -18,7 +19,7 @@ interface TaskFormProps {
 }
 
 // Use the Task type directly to ensure compatibility
-type TaskFormValues = Omit<Task, '_id' | 'createdAt' | 'updatedAt' | 'projectId' | 'parentTaskId' | 'subtasks'>;
+type TaskFormValues = Omit<Task, '_id' | 'createdAt' | 'updatedAt' | 'parentTaskId' | 'subtasks'>;
 
 // Create a validator for the task form
 const validateTaskForm = createValidator<TaskFormValues>({
@@ -30,6 +31,8 @@ const validateTaskForm = createValidator<TaskFormValues>({
   tags: () => null, // Tags are optional
   assignedTo: () => null, // AssignedTo is optional
   dueDate: () => null, // DueDate is optional
+  projectId: () => null, // ProjectId is optional
+  project: () => null, // Project is optional
 });
 
 // Reusable TextArea component
@@ -144,6 +147,7 @@ const Select: React.FC<SelectProps> = ({
 
 export function TaskForm({ task, onClose }: TaskFormProps) {
   const { createTask, updateTask, deleteTask, isDeleting } = useTaskManager();
+  const { projects } = useProjectManager();
   const isEditing = !!task;
 
   // Add view mode state
@@ -320,6 +324,18 @@ export function TaskForm({ task, onClose }: TaskFormProps) {
     { value: 'in_progress', label: 'In Progress' },
     { value: 'review', label: 'Review' },
     { value: 'done', label: 'Done' },
+  ];
+
+  // Add project selection to the form
+  type ProjectOption = { value: string; label: string; color?: string };
+  
+  const projectOptions: ProjectOption[] = [
+    { value: '', label: 'No Project' },
+    ...projects.map(project => ({
+      value: project._id || '',
+      label: project.name,
+      color: project.color
+    }))
   ];
 
   // Enhance description button
@@ -517,9 +533,39 @@ export function TaskForm({ task, onClose }: TaskFormProps) {
                 id="dueDate"
                 name="dueDate"
                 value={values.dueDate ? new Date(values.dueDate).toISOString().split('T')[0] : ''}
-                onChange={handleDateChange}
+                onChange={handleChange}
                 className="block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
               />
+            </div>
+          </div>
+
+          {/* Project Selection */}
+          <div>
+            <label htmlFor="projectId" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              Project
+            </label>
+            <div className="relative">
+              <select
+                id="projectId"
+                name="projectId"
+                className="w-full rounded-md border-slate-300 dark:border-slate-600 dark:bg-slate-800 shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-8"
+                value={values.projectId || ''}
+                onChange={handleChange}
+              >
+                {projectOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              {values.projectId && (
+                <div 
+                  className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full" 
+                  style={{ 
+                    backgroundColor: projectOptions.find(p => p.value === values.projectId)?.color || '#808080' 
+                  }}
+                ></div>
+              )}
             </div>
           </div>
 

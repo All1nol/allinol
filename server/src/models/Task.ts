@@ -1,5 +1,5 @@
 import mongoose, { Document, Schema } from 'mongoose';
-
+import  { IProject } from './Project';
 // Task categories based on roles
 export enum TaskCategory {
   DEVELOPMENT = 'development',
@@ -36,10 +36,11 @@ export interface ITask extends Document {
   dueDate?: Date;
   createdAt: Date;
   updatedAt: Date;
-  projectId?: string;
+  projectId?: mongoose.Types.ObjectId | string;
   parentTaskId?: string;
   subtasks?: string[];
   tags?: string[];
+  project?: IProject;
 }
 
 // Task schema
@@ -100,9 +101,19 @@ const TaskSchema: Schema = new Schema(
     }] 
   },
   {
-    timestamps: true
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
   }
 );
+
+// Virtual for populating project data
+TaskSchema.virtual('project', {
+  ref: 'Project',
+  localField: 'projectId',
+  foreignField: '_id',
+  justOne: true
+});
 
 // Add indexes for frequently queried fields
 TaskSchema.index({ status: 1 }); // Index for status queries
