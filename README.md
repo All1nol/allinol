@@ -1,4 +1,4 @@
-# Allinol - AI-Driven Business Automation Platform
+# Allinol - AI-Driven Business Automation Platform (MVP STAGE)
 
 Allinol is a comprehensive business automation platform that centralizes company operations through a cross-platform application, integrating neural networks and third-party services.
 
@@ -9,7 +9,7 @@ Allinol is a comprehensive business automation platform that centralizes company
 - **AI-Driven Automation**: AI-powered recommendations for workflow optimization
 - **Data & Entity Management**: Store, manage, and structure key business data
 - **Documentation & Knowledge Management**: AI-assisted document classification and retrieval
-- **Visual Database Management**: Integration with Apitable, NocoDB
+- **Visual Database Management**: Integration with Apitable, NocoDB 
 
 ## Project Structure
 
