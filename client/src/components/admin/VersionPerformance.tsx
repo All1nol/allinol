@@ -3,9 +3,7 @@ import { PromptTemplate } from '../../types/promptTemplate';
 import Modal from '../ui/Modal';
 import FormInput from '../ui/FormInput';
 import Button from '../ui/Button';
-import useForm from '../../hooks/useForm';
-import templateService from '../../services/templateService';
-import { createValidator, numberInRange, required } from '../../utils/validation';
+import { usePerformanceForm } from '../../hooks/usePerformanceForm';
 
 interface VersionPerformanceProps {
   template: PromptTemplate;
@@ -14,33 +12,13 @@ interface VersionPerformanceProps {
   onCancel: () => void;
 }
 
-interface PerformanceFormValues {
-  successRate: number;
-  avgResponseTime: number;
-  userRating: number;
-  sampleSize: number;
-}
-
-// Create a validator for the performance form
-const validatePerformanceForm = createValidator<PerformanceFormValues>({
-  successRate: (value) => numberInRange(value, 0, 100, 'Success rate must be between 0 and 100'),
-  avgResponseTime: (value) => numberInRange(value, 0, undefined, 'Response time must be a positive number'),
-  userRating: (value) => numberInRange(value, 0, 5, 'User rating must be between 0 and 5'),
-  sampleSize: (value) => {
-    const requiredError = required(value, 'Sample size is required');
-    if (requiredError) return requiredError;
-    
-    return numberInRange(value, 1, undefined, 'Sample size must be at least 1');
-  },
-});
-
 const VersionPerformance: React.FC<VersionPerformanceProps> = ({
   template,
   versionId,
   onSubmit,
   onCancel,
 }) => {
-  // Initialize form with useForm hook
+  // Use the custom hook for form handling
   const {
     values,
     errors,
@@ -48,27 +26,10 @@ const VersionPerformance: React.FC<VersionPerformanceProps> = ({
     isSubmitting,
     submitError,
     handleSubmit,
-  } = useForm<PerformanceFormValues>({
-    initialValues: {
-      successRate: 0,
-      avgResponseTime: 0,
-      userRating: 0,
-      sampleSize: 0,
-    },
-    validate: validatePerformanceForm,
-    onSubmit: async (formValues) => {
-      const result = await templateService.updateVersionPerformance(
-        template._id,
-        versionId,
-        formValues
-      );
-      
-      if (result.success) {
-        onSubmit();
-      } else {
-        throw new Error(result.message || 'Failed to update performance metrics');
-      }
-    },
+  } = usePerformanceForm({
+    templateId: template._id,
+    versionId,
+    onSuccess: onSubmit
   });
 
   return (

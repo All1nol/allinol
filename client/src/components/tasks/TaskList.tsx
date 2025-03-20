@@ -9,8 +9,6 @@ export function TaskList() {
     isLoading,
     isError,
     selectTask,
-    taskFilters,
-    clearTaskFilters,
     taskSort,
     setTaskSort,
   } = useTaskManager();

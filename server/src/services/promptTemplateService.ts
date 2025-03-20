@@ -1,5 +1,6 @@
-import PromptTemplate, { IPromptTemplate, IPromptVersion, PromptCategory } from '../models/PromptTemplate';
 import mongoose from 'mongoose';
+import PromptTemplate, { IPromptTemplate, IPromptVersion, PromptCategory } from '../models/PromptTemplate';
+import { BaseService } from './base/baseService';
 
 interface CreatePromptTemplateInput {
   title: string;
@@ -25,16 +26,21 @@ interface CreateVersionInput {
   userId: string;
 }
 
-interface UpdateVersionPerformanceInput {
-  promptId: string;
-  version: number;
+interface VersionPerformanceInput {
   successRate?: number;
   averageResponseTime?: number;
   userRating?: number;
   sampleSize?: number;
 }
 
-class PromptTemplateService {
+/**
+ * Service for managing prompt templates
+ */
+class PromptTemplateService extends BaseService<IPromptTemplate> {
+  constructor() {
+    super(PromptTemplate);
+  }
+
   /**
    * Create a new prompt template
    */
@@ -72,31 +78,20 @@ class PromptTemplateService {
     page = 1,
     limit = 10
   ): Promise<{ templates: IPromptTemplate[]; total: number; page: number; totalPages: number }> {
-    const query: any = {};
+    const query: mongoose.FilterQuery<IPromptTemplate> = {};
     
     if (filters.category) query.category = filters.category;
     if (filters.tags && filters.tags.length > 0) query.tags = { $in: filters.tags };
     if (filters.isActive !== undefined) query.isActive = filters.isActive;
     if (filters.createdBy) query.createdBy = filters.createdBy;
     
-    const skip = (page - 1) * limit;
-    
-    const [templates, total] = await Promise.all([
-      PromptTemplate.find(query)
-        .sort({ updatedAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .populate('createdBy', 'username'),
-      PromptTemplate.countDocuments(query)
-    ]);
-    
-    const totalPages = Math.ceil(total / limit);
+    const result = await this.findAll(query, page, limit, { updatedAt: -1 }, 'createdBy');
     
     return {
-      templates,
-      total,
-      page,
-      totalPages
+      templates: result.data,
+      total: result.total,
+      page: result.page,
+      totalPages: result.totalPages
     };
   }
   
@@ -108,7 +103,7 @@ class PromptTemplateService {
       return null;
     }
     
-    return await PromptTemplate.findById(id).populate('createdBy', 'username');
+    return await this.findById(id);
   }
   
   /**
@@ -119,48 +114,85 @@ class PromptTemplateService {
       return null;
     }
     
-    return await PromptTemplate.findByIdAndUpdate(
-      id,
-      { $set: input },
-      { new: true }
-    );
+    return await this.update(id, input);
   }
   
   /**
-   * Create a new version of a prompt template
+   * Add a new version to a prompt template
    */
-  async createVersion(input: CreateVersionInput): Promise<IPromptTemplate | null> {
-    const { promptId, content, description, userId } = input;
-    
+  async addPromptVersion(
+    promptId: string,
+    versionData: { 
+      content: string;
+      description?: string;
+      createdBy: string;
+    }
+  ): Promise<IPromptTemplate | null> {
     if (!mongoose.Types.ObjectId.isValid(promptId)) {
       return null;
     }
     
-    const promptTemplate = await PromptTemplate.findById(promptId);
+    const promptTemplate = await this.findById(promptId);
     
     if (!promptTemplate) {
       return null;
     }
     
-    const newVersion = promptTemplate.currentVersion + 1;
+    // Calculate the next version number
+    const nextVersion = promptTemplate.versions.length > 0
+      ? Math.max(...promptTemplate.versions.map(v => v.version)) + 1
+      : 1;
     
-    promptTemplate.versions.push({
-      version: newVersion,
-      content,
-      description,
-      createdAt: new Date(),
-      createdBy: userId,
-      performance: {
-        successRate: 0,
-        averageResponseTime: 0,
-        userRating: 0,
-        sampleSize: 0
-      }
-    });
+    // Create the new version
+    const newVersion: IPromptVersion = {
+      version: nextVersion,
+      content: versionData.content,
+      description: versionData.description,
+      createdBy: versionData.createdBy,
+      createdAt: new Date()
+    };
     
-    promptTemplate.currentVersion = newVersion;
+    // Add to versions array and update the current version
+    promptTemplate.versions.push(newVersion);
+    promptTemplate.currentVersion = nextVersion;
     
-    return await promptTemplate.save();
+    await promptTemplate.save();
+    return promptTemplate;
+  }
+  
+  /**
+   * Update performance metrics for a specific version
+   */
+  async updateVersionPerformance(
+    promptId: string,
+    versionId: number,
+    performanceData: VersionPerformanceInput
+  ): Promise<IPromptTemplate | null> {
+    if (!mongoose.Types.ObjectId.isValid(promptId)) {
+      return null;
+    }
+    
+    const promptTemplate = await this.findById(promptId);
+    
+    if (!promptTemplate) {
+      return null;
+    }
+    
+    // Find the version in the versions array
+    const versionIndex = promptTemplate.versions.findIndex(v => v.version === versionId);
+    
+    if (versionIndex === -1) {
+      return null;
+    }
+    
+    // Update the performance metrics
+    promptTemplate.versions[versionIndex].performance = {
+      ...promptTemplate.versions[versionIndex].performance,
+      ...performanceData
+    };
+    
+    await promptTemplate.save();
+    return promptTemplate;
   }
   
   /**
@@ -171,7 +203,7 @@ class PromptTemplateService {
       return null;
     }
     
-    const promptTemplate = await PromptTemplate.findById(promptId);
+    const promptTemplate = await this.findById(promptId);
     
     if (!promptTemplate) {
       return null;
@@ -185,40 +217,6 @@ class PromptTemplateService {
   }
   
   /**
-   * Update the performance metrics of a prompt version
-   */
-  async updateVersionPerformance(input: UpdateVersionPerformanceInput): Promise<IPromptTemplate | null> {
-    const { promptId, version, ...performanceData } = input;
-    
-    if (!mongoose.Types.ObjectId.isValid(promptId)) {
-      return null;
-    }
-    
-    const promptTemplate = await PromptTemplate.findById(promptId);
-    
-    if (!promptTemplate) {
-      return null;
-    }
-    
-    // Find the version in the versions array
-    const versionIndex = promptTemplate.versions.findIndex(v => v.version === version);
-    
-    if (versionIndex === -1) {
-      return null;
-    }
-    
-    // Update the performance metrics
-    Object.entries(performanceData).forEach(([key, value]) => {
-      if (value !== undefined) {
-        // @ts-ignore - We know these properties exist
-        promptTemplate.versions[versionIndex].performance[key] = value;
-      }
-    });
-    
-    return await promptTemplate.save();
-  }
-  
-  /**
    * Delete a prompt template
    */
   async deletePromptTemplate(id: string): Promise<boolean> {
@@ -226,10 +224,9 @@ class PromptTemplateService {
       return false;
     }
     
-    const result = await PromptTemplate.deleteOne({ _id: id });
-    
-    return result.deletedCount === 1;
+    return await this.delete(id);
   }
 }
 
+// Export a singleton instance
 export default new PromptTemplateService(); 

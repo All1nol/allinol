@@ -1,4 +1,3 @@
-import React from 'react';
 import { useProjectManager } from '../../context/ProjectContext';
 import { ProjectCard } from './ProjectCard';
 import { Project } from '../../api/projectApi';
@@ -9,8 +8,6 @@ export function ProjectList() {
     isLoading,
     isError,
     selectProject,
-    projectFilters,
-    clearProjectFilters,
     projectSort,
     setProjectSort,
   } = useProjectManager();

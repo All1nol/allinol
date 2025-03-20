@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { llmService } from '../../services/llmService';
+import llmService from '../../services/llmService';
 
 interface Message {
   id: string;

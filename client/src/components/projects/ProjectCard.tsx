@@ -1,9 +1,11 @@
-import React from 'react';
 import { Project } from '../../api/projectApi';
 import { cn } from '../../utils/cn';
 
+// Define the project status type
+type ProjectStatus = 'active' | 'completed' | 'on_hold' | 'cancelled';
+
 // Status badge colors
-const statusColors = {
+const statusColors: Record<ProjectStatus, string> = {
   active: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-100',
   completed: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100',
   on_hold: 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100',
@@ -28,6 +30,10 @@ export function ProjectCard({ project, onClick }: ProjectCardProps) {
   // Get task count - handle both string[] and object[] cases
   const taskCount = project.tasks ? project.tasks.length : 0;
 
+  // Get the status color safely
+  const statusColor = statusColors[project.status as ProjectStatus] || 
+    'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-100';
+
   return (
     <div 
       onClick={onClick}
@@ -42,7 +48,7 @@ export function ProjectCard({ project, onClick }: ProjectCardProps) {
           ></div>
           <h3 className="font-medium text-lg text-slate-900 dark:text-slate-100">{project.name}</h3>
         </div>
-        <div className={cn("px-2.5 py-1 rounded-full text-xs font-medium", statusColors[project.status as keyof typeof statusColors])}>
+        <div className={cn("px-2.5 py-1 rounded-full text-xs font-medium", statusColor)}>
           {project.status.replace('_', ' ')}
         </div>
       </div>

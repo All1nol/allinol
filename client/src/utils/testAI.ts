@@ -1,4 +1,4 @@
-import { llmService } from '../services/llmService';
+import llmService from '../services/llmService';
 
 /**
  * Utility function to test the AI integration

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Task } from '../../api/taskApi';
 import { useTaskManager } from '../../hooks/useTaskManager';
 import { useProjectManager } from '../../context/ProjectContext';
-import { llmService } from '../../services/llmService';
+import llmService from '../../services/llmService';
 import useForm from '../../hooks/useForm';
 import Button from '../ui/Button';
 import FormInput from '../ui/FormInput';
@@ -151,11 +151,11 @@ export function TaskForm({ task, onClose }: TaskFormProps) {
   const isEditing = !!task;
 
   // Add view mode state
-  const [isViewMode, setIsViewMode] = React.useState(isEditing);
-  const [isEditMode, setIsEditMode] = React.useState(false);
+  const [isViewMode, setIsViewMode] = useState(isEditing);
+  const [isEditMode, setIsEditMode] = useState(false);
 
   // AI enhancement states
-  const [isEnhancingDescription, setIsEnhancingDescription] = React.useState(false);
+  const [isEnhancingDescription, setIsEnhancingDescription] = useState(false);
 
   // Initialize form with useForm hook
   const {
@@ -207,12 +207,6 @@ export function TaskForm({ task, onClose }: TaskFormProps) {
       });
     }
   }, [task, setValues]);
-
-  // Handle date input changes
-  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setValues(prev => ({ ...prev, [name]: value ? new Date(value) : undefined }));
-  };
 
   const handleDelete = async () => {
     const confirmed = window.confirm('Are you sure you want to delete this task?');

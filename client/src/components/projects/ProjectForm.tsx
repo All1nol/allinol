@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Project } from '../../api/projectApi';
+import { Task } from '../../api/taskApi';
 import { useProjectManager } from '../../context/ProjectContext';
 import { useAuth } from '../../context/AuthContext';
 import useForm from '../../hooks/useForm';
@@ -10,6 +11,21 @@ import TagsInput from '../tasks/TagsInput';
 interface ProjectFormProps {
   project?: Project;
   onClose: () => void;
+}
+
+// Define a type for the form values
+interface ProjectFormValues {
+  _id?: string;
+  name: string;
+  description: string;
+  color: string;
+  status: 'active' | 'completed' | 'on_hold' | 'cancelled';
+  startDate: string;
+  endDate: string;
+  owner: string;
+  members?: string[];
+  tasks?: Array<string | Task>;
+  tags?: string[];
 }
 
 // Predefined color options
@@ -37,7 +53,7 @@ export function ProjectForm({ project, onClose }: ProjectFormProps) {
   const [isEditMode, setIsEditMode] = useState(!isEditing);
   
   // Form validation
-  const validate = (values: any) => {
+  const validate = (values: ProjectFormValues) => {
     const errors: Record<string, string> = {};
     if (!values.name) errors.name = 'Project name is required';
     if (!values.description) errors.description = 'Project description is required';
@@ -115,7 +131,7 @@ export function ProjectForm({ project, onClose }: ProjectFormProps) {
   };
 
   // Handle field value changes
-  const setFieldValue = (field: string, value: any) => {
+  const setFieldValue = (field: string, value: unknown) => {
     setValues({ ...values, [field]: value });
   };
   

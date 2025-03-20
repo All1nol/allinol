@@ -60,7 +60,7 @@ const PromptTemplateForm: React.FC<PromptTemplateFormProps> = ({
     validate: validatePromptTemplateForm,
     onSubmit: async (formValues) => {
       try {
-        const { tagInput, ...templateData } = formValues;
+        const { tagInput: _, ...templateData } = formValues;
         
         const apiUrl = `${import.meta.env.VITE_API_URL}/prompt-templates`;
         const method = template ? 'put' : 'post';

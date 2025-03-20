@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { llmService } from '../../services/llmService';
+import llmService from '../../services/llmService';
 import Button from '../ui/Button';
 import { Task } from '../../api/taskApi';
 import AdminPromptSelector from './AdminPromptSelector';

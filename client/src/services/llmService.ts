@@ -6,14 +6,20 @@ const API_URL = import.meta.env?.VITE_API_URL || 'http://localhost:5000/api';
 /**
  * Service for interacting with the LLM API endpoints
  */
-export const llmService = {
+class LlmService {
+  private readonly apiUrl: string;
+  
+  constructor(apiUrl: string = API_URL) {
+    this.apiUrl = apiUrl;
+  }
+
   /**
-   * Generate a completion using the Groq API
+   * Generate a completion using the LLM API
    * @param prompt The prompt to send to the model
    * @param options Optional parameters for the completion
    * @returns The model's response
    */
-  generateCompletion: async (
+  async generateCompletion(
     prompt: string,
     options: {
       model?: string;
@@ -22,10 +28,10 @@ export const llmService = {
       topP?: number;
       stop?: string[];
     } = {}
-  ) => {
+  ) {
     try {
       const response = await axios.post(
-        `${API_URL}/llm/completion`,
+        `${this.apiUrl}/llm/completion`,
         {
           prompt,
           ...options,
@@ -42,17 +48,17 @@ export const llmService = {
       console.error('Error generating completion:', error);
       throw error;
     }
-  },
+  }
 
   /**
-   * Generate embeddings using the Groq API
+   * Generate embeddings using the LLM API
    * @param input The text to generate embeddings for
    * @param model Optional model to use for embeddings
    * @returns The generated embeddings
    */
-  generateEmbeddings: async (input: string | string[], model?: string) => {
+  async generateEmbeddings(input: string | string[], model?: string) {
     try {
-      const response = await axios.post(`${API_URL}/llm/embeddings`, {
+      const response = await axios.post(`${this.apiUrl}/llm/embeddings`, {
         input,
         model,
       });
@@ -64,5 +70,10 @@ export const llmService = {
       }
       throw new Error('Failed to connect to the server');
     }
-  },
-}; 
+  }
+}
+
+// Create and export a singleton instance
+const llmService = new LlmService();
+
+export default llmService; 

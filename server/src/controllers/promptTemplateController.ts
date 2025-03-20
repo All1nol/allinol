@@ -1,336 +1,175 @@
 import { Request, Response } from 'express';
+import { BaseController } from './base/baseController';
+import { IPromptTemplate, PromptCategory } from '../models/PromptTemplate';
 import promptTemplateService from '../services/promptTemplateService';
-import { PromptCategory } from '../models/PromptTemplate';
 
 /**
- * Create a new prompt template
- * @route POST /api/prompt-templates
+ * Controller for prompt template operations
  */
-export const createPromptTemplate = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { title, description, category, content, tags } = req.body;
-    
-    // Validate required fields
-    if (!title || !description || !category || !content) {
-      res.status(400).json({ 
-        success: false, 
-        message: 'Missing required fields' 
-      });
-      return;
-    }
-    
-    // Validate category
-    if (!Object.values(PromptCategory).includes(category as PromptCategory)) {
-      res.status(400).json({ 
-        success: false, 
-        message: 'Invalid category' 
-      });
-      return;
-    }
-    
-    // @ts-ignore - We know req.user exists from auth middleware
-    const userId = req.user.id;
-    
-    const promptTemplate = await promptTemplateService.createPromptTemplate({
-      title,
-      description,
-      category: category as PromptCategory,
-      content,
-      tags,
-      userId
-    });
-    
-    res.status(201).json({
-      success: true,
-      data: promptTemplate
-    });
-  } catch (error) {
-    console.error('Error creating prompt template:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error'
-    });
+export class PromptTemplateController extends BaseController<IPromptTemplate> {
+  constructor() {
+    super(promptTemplateService);
   }
-};
+  
+  /**
+   * Get all prompt templates with filtering
+   */
+  getAllTemplates = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      
+      // Parse filters from query parameters
+      const filters: {
+        category?: PromptCategory;
+        tags?: string[];
+        isActive?: boolean;
+        createdBy?: string;
+      } = {};
+      
+      if (req.query.category) {
+        filters.category = req.query.category as PromptCategory;
+      }
+      
+      if (req.query.tags) {
+        filters.tags = (req.query.tags as string).split(',');
+      }
+      
+      if (req.query.isActive !== undefined) {
+        filters.isActive = req.query.isActive === 'true';
+      }
+      
+      if (req.query.createdBy) {
+        filters.createdBy = req.query.createdBy as string;
+      }
+      
+      const result = await promptTemplateService.getPromptTemplates(filters, page, limit);
+      
+      res.status(200).json({
+        success: true,
+        templates: result.templates,
+        pagination: {
+          total: result.total,
+          page: result.page,
+          totalPages: result.totalPages
+        }
+      });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      res.status(500).json({ success: false, message: errorMessage });
+    }
+  }
+  
+  /**
+   * Add a new version to a prompt template
+   */
+  addVersion = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { promptId } = req.params;
+      const { content, description } = req.body;
+      
+      if (!content) {
+        res.status(400).json({ success: false, message: 'Content is required' });
+        return;
+      }
+      
+      // Assuming the user ID is available in req.user from authentication middleware
+      const createdBy = (req.user as any)?.id || req.body.createdBy;
+      
+      if (!createdBy) {
+        res.status(400).json({ success: false, message: 'User ID is required' });
+        return;
+      }
+      
+      const updatedTemplate = await promptTemplateService.addPromptVersion(
+        promptId,
+        { content, description, createdBy }
+      );
+      
+      if (!updatedTemplate) {
+        res.status(404).json({ success: false, message: 'Prompt template not found' });
+        return;
+      }
+      
+      res.status(200).json({
+        success: true,
+        template: updatedTemplate
+      });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      res.status(500).json({ success: false, message: errorMessage });
+    }
+  }
+  
+  /**
+   * Update performance metrics for a specific version
+   */
+  updateVersionPerformance = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { templateId, versionId } = req.params;
+      const { successRate, avgResponseTime, userRating, sampleSize } = req.body;
+      
+      // Validate required fields
+      if (sampleSize === undefined) {
+        res.status(400).json({ success: false, message: 'Sample size is required' });
+        return;
+      }
+      
+      const performanceData = {
+        successRate,
+        averageResponseTime: avgResponseTime,
+        userRating,
+        sampleSize
+      };
+      
+      const updatedTemplate = await promptTemplateService.updateVersionPerformance(
+        templateId,
+        parseInt(versionId),
+        performanceData
+      );
+      
+      if (!updatedTemplate) {
+        res.status(404).json({ success: false, message: 'Template or version not found' });
+        return;
+      }
+      
+      res.status(200).json({
+        success: true,
+        message: 'Performance metrics updated successfully'
+      });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      res.status(500).json({ success: false, message: errorMessage });
+    }
+  }
+  
+  /**
+   * Get a specific version of a prompt template
+   */
+  getVersion = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { templateId, versionId } = req.params;
+      
+      const version = await promptTemplateService.getPromptVersion(
+        templateId,
+        versionId ? parseInt(versionId) : undefined
+      );
+      
+      if (!version) {
+        res.status(404).json({ success: false, message: 'Template or version not found' });
+        return;
+      }
+      
+      res.status(200).json({
+        success: true,
+        version
+      });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      res.status(500).json({ success: false, message: errorMessage });
+    }
+  }
+}
 
-/**
- * Get all prompt templates with optional filtering
- * @route GET /api/prompt-templates
- */
-export const getPromptTemplates = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { 
-      category, 
-      tags, 
-      isActive, 
-      createdBy,
-      page = '1',
-      limit = '10'
-    } = req.query;
-    
-    const filters: any = {};
-    
-    if (category) {
-      filters.category = category;
-    }
-    
-    if (tags) {
-      filters.tags = Array.isArray(tags) ? tags : [tags];
-    }
-    
-    if (isActive !== undefined) {
-      filters.isActive = isActive === 'true';
-    }
-    
-    if (createdBy) {
-      filters.createdBy = createdBy;
-    }
-    
-    const result = await promptTemplateService.getPromptTemplates(
-      filters,
-      parseInt(page as string),
-      parseInt(limit as string)
-    );
-    
-    res.status(200).json({
-      success: true,
-      data: result
-    });
-  } catch (error) {
-    console.error('Error getting prompt templates:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error'
-    });
-  }
-};
-
-/**
- * Get a prompt template by ID
- * @route GET /api/prompt-templates/:id
- */
-export const getPromptTemplateById = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { id } = req.params;
-    
-    const promptTemplate = await promptTemplateService.getPromptTemplateById(id);
-    
-    if (!promptTemplate) {
-      res.status(404).json({
-        success: false,
-        message: 'Prompt template not found'
-      });
-      return;
-    }
-    
-    res.status(200).json({
-      success: true,
-      data: promptTemplate
-    });
-  } catch (error) {
-    console.error('Error getting prompt template:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error'
-    });
-  }
-};
-
-/**
- * Update a prompt template
- * @route PUT /api/prompt-templates/:id
- */
-export const updatePromptTemplate = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { id } = req.params;
-    const { title, description, category, tags, isActive } = req.body;
-    
-    // Validate category if provided
-    if (category && !Object.values(PromptCategory).includes(category as PromptCategory)) {
-      res.status(400).json({ 
-        success: false, 
-        message: 'Invalid category' 
-      });
-      return;
-    }
-    
-    const updatedPromptTemplate = await promptTemplateService.updatePromptTemplate(id, {
-      title,
-      description,
-      category: category as PromptCategory,
-      tags,
-      isActive
-    });
-    
-    if (!updatedPromptTemplate) {
-      res.status(404).json({
-        success: false,
-        message: 'Prompt template not found'
-      });
-      return;
-    }
-    
-    res.status(200).json({
-      success: true,
-      data: updatedPromptTemplate
-    });
-  } catch (error) {
-    console.error('Error updating prompt template:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error'
-    });
-  }
-};
-
-/**
- * Create a new version of a prompt template
- * @route POST /api/prompt-templates/:id/versions
- */
-export const createVersion = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { id } = req.params;
-    const { content, description } = req.body;
-    
-    if (!content) {
-      res.status(400).json({ 
-        success: false, 
-        message: 'Content is required' 
-      });
-      return;
-    }
-    
-    // @ts-ignore - We know req.user exists from auth middleware
-    const userId = req.user.id;
-    
-    const updatedPromptTemplate = await promptTemplateService.createVersion({
-      promptId: id,
-      content,
-      description,
-      userId
-    });
-    
-    if (!updatedPromptTemplate) {
-      res.status(404).json({
-        success: false,
-        message: 'Prompt template not found'
-      });
-      return;
-    }
-    
-    res.status(201).json({
-      success: true,
-      data: updatedPromptTemplate
-    });
-  } catch (error) {
-    console.error('Error creating prompt version:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error'
-    });
-  }
-};
-
-/**
- * Get a specific version of a prompt template
- * @route GET /api/prompt-templates/:id/versions/:version
- */
-export const getPromptVersion = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { id, version } = req.params;
-    
-    const promptVersion = await promptTemplateService.getPromptVersion(
-      id,
-      version ? parseInt(version) : undefined
-    );
-    
-    if (!promptVersion) {
-      res.status(404).json({
-        success: false,
-        message: 'Prompt version not found'
-      });
-      return;
-    }
-    
-    res.status(200).json({
-      success: true,
-      data: promptVersion
-    });
-  } catch (error) {
-    console.error('Error getting prompt version:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error'
-    });
-  }
-};
-
-/**
- * Update the performance metrics of a prompt version
- * @route PATCH /api/prompt-templates/:id/versions/:version/performance
- */
-export const updateVersionPerformance = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { id, version } = req.params;
-    const { successRate, averageResponseTime, userRating, sampleSize } = req.body;
-    
-    const updatedPromptTemplate = await promptTemplateService.updateVersionPerformance({
-      promptId: id,
-      version: parseInt(version),
-      successRate,
-      averageResponseTime,
-      userRating,
-      sampleSize
-    });
-    
-    if (!updatedPromptTemplate) {
-      res.status(404).json({
-        success: false,
-        message: 'Prompt template or version not found'
-      });
-      return;
-    }
-    
-    res.status(200).json({
-      success: true,
-      data: updatedPromptTemplate
-    });
-  } catch (error) {
-    console.error('Error updating prompt version performance:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error'
-    });
-  }
-};
-
-/**
- * Delete a prompt template
- * @route DELETE /api/prompt-templates/:id
- */
-export const deletePromptTemplate = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { id } = req.params;
-    
-    const deleted = await promptTemplateService.deletePromptTemplate(id);
-    
-    if (!deleted) {
-      res.status(404).json({
-        success: false,
-        message: 'Prompt template not found'
-      });
-      return;
-    }
-    
-    res.status(200).json({
-      success: true,
-      message: 'Prompt template deleted successfully'
-    });
-  } catch (error) {
-    console.error('Error deleting prompt template:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error'
-    });
-  }
-}; 
+// Export a singleton instance
+export default new PromptTemplateController(); 

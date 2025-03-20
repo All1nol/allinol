@@ -1,33 +1,31 @@
 import express from 'express';
-import {
-  createPromptTemplate,
-  getPromptTemplates,
-  getPromptTemplateById,
-  updatePromptTemplate,
-  deletePromptTemplate,
-  createVersion,
-  getPromptVersion,
-  updateVersionPerformance
-} from '../controllers/promptTemplateController';
-import { verifyToken } from '../middleware/authMiddleware';
-import { checkRole } from '../middleware/roleMiddleware';
-import { UserRole } from '../models/User';
+import promptTemplateController from '../controllers/promptTemplateController';
+import { authMiddleware } from '../middleware/authMiddleware';
 
 const router = express.Router();
 
-// All routes require authentication
-router.use(verifyToken);
+// Apply authentication middleware to all routes
+router.use(authMiddleware);
 
-// Routes accessible to all authenticated users
-router.get('/', getPromptTemplates);
-router.get('/:id', getPromptTemplateById);
-router.get('/:id/versions/:version?', getPromptVersion);
+// Root routes
+router.route('/')
+  .get(promptTemplateController.getAllTemplates)
+  .post(promptTemplateController.create);
 
-// Routes that require admin role
-router.post('/', checkRole([UserRole.ADMIN]), createPromptTemplate);
-router.put('/:id', checkRole([UserRole.ADMIN]), updatePromptTemplate);
-router.delete('/:id', checkRole([UserRole.ADMIN]), deletePromptTemplate);
-router.post('/:id/versions', checkRole([UserRole.ADMIN]), createVersion);
-router.patch('/:id/versions/:version/performance', checkRole([UserRole.ADMIN]), updateVersionPerformance);
+// ID-based routes
+router.route('/:id')
+  .get(promptTemplateController.getById)
+  .put(promptTemplateController.update)
+  .delete(promptTemplateController.delete);
 
-export default router; 
+// Version routes
+router.route('/:promptId/versions')
+  .post(promptTemplateController.addVersion);
+
+router.route('/:templateId/versions/:versionId')
+  .get(promptTemplateController.getVersion);
+
+router.route('/:templateId/versions/:versionId/performance')
+  .put(promptTemplateController.updateVersionPerformance);
+
+export default router;

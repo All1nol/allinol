@@ -59,8 +59,9 @@ export const createProject = async (project: Omit<Project, '_id'>): Promise<Proj
   try {
     const response = await projectApi.post('/', project);
     return response.data;
-  } catch (error: any) {
-    console.error('Server error response:', error.response?.data);
+  } catch (error: unknown) {
+    console.error('Server error response:', error instanceof Error && 'response' in error ? 
+      (error as { response?: { data?: unknown } }).response?.data : error);
     throw error;
   }
 };

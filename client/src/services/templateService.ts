@@ -1,7 +1,5 @@
-import axios from 'axios';
 import { PromptTemplate } from '../types/promptTemplate';
-
-const API_URL = import.meta.env.VITE_API_URL;
+import httpClient, { IHttpClient } from './httpClient';
 
 interface PerformanceMetrics {
   successRate: number;
@@ -10,71 +8,92 @@ interface PerformanceMetrics {
   sampleSize: number;
 }
 
-export const templateService = {
+interface TemplateResponse {
+  template: PromptTemplate;
+}
+
+interface TemplatesResponse {
+  templates: PromptTemplate[];
+}
+
+/**
+ * Service for managing prompt templates
+ */
+class TemplateService {
+  private readonly httpClient: IHttpClient;
+  
+  constructor(httpClient: IHttpClient) {
+    this.httpClient = httpClient;
+  }
+
   /**
    * Get all prompt templates
    */
-  getAllTemplates: async (): Promise<PromptTemplate[]> => {
-    const response = await axios.get(`${API_URL}/prompt-templates`);
-    return response.data.templates;
-  },
+  async getAllTemplates(): Promise<PromptTemplate[]> {
+    const response = await this.httpClient.get<TemplatesResponse>('/prompt-templates');
+    return response.templates;
+  }
 
   /**
    * Get a specific prompt template by ID
    */
-  getTemplateById: async (templateId: string): Promise<PromptTemplate> => {
-    const response = await axios.get(`${API_URL}/prompt-templates/${templateId}`);
-    return response.data.template;
-  },
+  async getTemplateById(templateId: string): Promise<PromptTemplate> {
+    const response = await this.httpClient.get<TemplateResponse>(`/prompt-templates/${templateId}`);
+    return response.template;
+  }
 
   /**
    * Create a new prompt template
    */
-  createTemplate: async (templateData: Partial<PromptTemplate>): Promise<PromptTemplate> => {
-    const response = await axios.post(`${API_URL}/prompt-templates`, templateData);
-    return response.data.template;
-  },
+  async createTemplate(templateData: Partial<PromptTemplate>): Promise<PromptTemplate> {
+    const response = await this.httpClient.post<TemplateResponse>('/prompt-templates', templateData);
+    return response.template;
+  }
 
   /**
    * Update a prompt template
    */
-  updateTemplate: async (templateId: string, templateData: Partial<PromptTemplate>): Promise<PromptTemplate> => {
-    const response = await axios.put(`${API_URL}/prompt-templates/${templateId}`, templateData);
-    return response.data.template;
-  },
+  async updateTemplate(templateId: string, templateData: Partial<PromptTemplate>): Promise<PromptTemplate> {
+    const response = await this.httpClient.put<TemplateResponse>(`/prompt-templates/${templateId}`, templateData);
+    return response.template;
+  }
 
   /**
    * Delete a prompt template
    */
-  deleteTemplate: async (templateId: string): Promise<{ success: boolean }> => {
-    const response = await axios.delete(`${API_URL}/prompt-templates/${templateId}`);
-    return response.data;
-  },
+  async deleteTemplate(templateId: string): Promise<{ success: boolean }> {
+    return await this.httpClient.delete<{ success: boolean }>(`/prompt-templates/${templateId}`);
+  }
 
   /**
    * Update performance metrics for a specific version
    */
-  updateVersionPerformance: async (
+  async updateVersionPerformance(
     templateId: string,
     versionId: string,
     performanceData: PerformanceMetrics
-  ): Promise<{ success: boolean; message?: string }> => {
+  ): Promise<{ success: boolean; message?: string }> {
     try {
-      const response = await axios.put(
-        `${API_URL}/prompt-templates/${templateId}/versions/${versionId}/performance`,
+      return await this.httpClient.put<{ success: boolean; message?: string }>(
+        `/prompt-templates/${templateId}/versions/${versionId}/performance`,
         performanceData
       );
-      return response.data;
     } catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
+      if (error instanceof Error) {
         return { 
           success: false, 
-          message: error.response.data.message || 'Failed to update performance metrics' 
+          message: error.message || 'Failed to update performance metrics' 
         };
       }
-      throw error;
+      return {
+        success: false,
+        message: 'An unexpected error occurred'
+      };
     }
   }
-};
+}
+
+// Create and export a singleton instance
+const templateService = new TemplateService(httpClient);
 
 export default templateService; 
