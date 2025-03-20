@@ -475,6 +475,7 @@ export function TaskForm({ task, onClose }: TaskFormProps) {
               required
               placeholder="Task title"
               error={errors.title}
+              title="title"
             />
 
             <TextArea

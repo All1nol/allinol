@@ -98,6 +98,7 @@ const VersionPerformance: React.FC<VersionPerformanceProps> = ({
             max={100}
             step="0.1"
             error={errors.successRate}
+            title="successRate"
           />
 
           {/* Average Response Time */}

@@ -157,8 +157,9 @@ const PromptTemplateForm: React.FC<PromptTemplateFormProps> = ({
             value={values.title}
             onChange={handleChange}
             required
-            placeholder="Enter a descriptive title"
+            placeholder="Template title"
             error={errors.title}
+            title="title"
           />
 
           {/* Description */}

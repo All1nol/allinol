@@ -14,6 +14,7 @@ interface FormInputProps {
   disabled?: boolean;
   className?: string;
   error?: string;
+  title?: string;
 }
 
 const FormInput: React.FC<FormInputProps> = ({
@@ -30,6 +31,7 @@ const FormInput: React.FC<FormInputProps> = ({
   disabled = false,
   className = '',
   error,
+  title,
 }) => {
   return (
     <div className="space-y-1">
@@ -39,6 +41,7 @@ const FormInput: React.FC<FormInputProps> = ({
       </label>
       <input
         id={id}
+        name={title || id}
         type={type}
         value={value}
         onChange={onChange}
