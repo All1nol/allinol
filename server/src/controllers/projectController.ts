@@ -4,7 +4,7 @@ import Project  from '../models/Project';
 // Get all projects
 export const getProjects = async (req: Request, res: Response): Promise<void> => {
     try{
-        const projects = await Project.find({});    
+        const projects = await Project.find({}).populate('tasks');    
         res.status(200).json(projects);
     } catch (error: unknown) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
@@ -15,7 +15,7 @@ export const getProjects = async (req: Request, res: Response): Promise<void> =>
 // Get a single project by ID
 export const getProjectById = async (req: Request, res: Response): Promise<void> => {
     try{
-        const project = await Project.findById(req.params.id);
+        const project = await Project.findById(req.params.id).populate('tasks');
         if(!project){
             res.status(404).json({ message: 'Project not found' });
             return;
@@ -75,7 +75,7 @@ export const deleteProject = async (req: Request, res: Response): Promise<void> 
 export const getProjectsByStatus = async (req: Request, res: Response): Promise<void> => {
     try{
         const { status } = req.params;  
-        const projects = await Project.find({ status });
+        const projects = await Project.find({ status }).populate('tasks');
         res.status(200).json(projects);
     } catch (error: unknown) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
@@ -87,7 +87,7 @@ export const getProjectsByStatus = async (req: Request, res: Response): Promise<
 export const getProjectsByOwner = async (req: Request, res: Response): Promise<void> => {
     try{
         const { owner } = req.params;
-        const projects = await Project.find({ owner });
+        const projects = await Project.find({ owner }).populate('tasks');
         res.status(200).json(projects);
     } catch (error: unknown) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
@@ -99,7 +99,7 @@ export const getProjectsByOwner = async (req: Request, res: Response): Promise<v
 export const getProjectsByMember = async (req: Request, res: Response): Promise<void> => {
     try{
         const { member } = req.params;
-        const projects = await Project.find({ members: member });
+        const projects = await Project.find({ members: member }).populate('tasks');
         res.status(200).json(projects);
     } catch (error: unknown) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
@@ -111,14 +111,13 @@ export const getProjectsByMember = async (req: Request, res: Response): Promise<
 export const getProjectsByTag = async (req: Request, res: Response): Promise<void> => {
     try{
         const { tag } = req.params;
-        const projects = await Project.find({ tags: tag });
+        const projects = await Project.find({ tags: tag }).populate('tasks');
         res.status(200).json(projects);
     } catch (error: unknown) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
         res.status(500).json({ message: errorMessage });
     }
 };
-
 
 // Get projects by date range
 export const getProjectsByDateRange = async (req: Request, res: Response): Promise<void> => {
@@ -127,7 +126,7 @@ export const getProjectsByDateRange = async (req: Request, res: Response): Promi
         const projects = await Project.find({
             startDate: { $gte: startDate },
             endDate: { $lte: endDate }
-        });
+        }).populate('tasks');
         res.status(200).json(projects);
     } catch (error: unknown) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
@@ -139,7 +138,7 @@ export const getProjectsByDateRange = async (req: Request, res: Response): Promi
 export const getProjectsByColor = async (req: Request, res: Response): Promise<void> => {
     try{
         const { color } = req.params;
-        const projects = await Project.find({ color });
+        const projects = await Project.find({ color }).populate('tasks');
         res.status(200).json(projects);
     } catch (error: unknown) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
@@ -163,6 +162,22 @@ export const getProjectsByName = async (req: Request, res: Response): Promise<vo
 export const getProjectsByDescription = async (req: Request, res: Response): Promise<void> => {
     try{
         
+    } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+        res.status(500).json({ message: errorMessage });
+    }
+};
+
+// Get tasks for a specific project
+export const getProjectTasks = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { id } = req.params;
+        
+        // Import Task model here to avoid circular dependencies
+        const Task = require('../models/Task').default;
+        
+        const tasks = await Task.find({ projectId: id }).populate('project');
+        res.status(200).json(tasks);
     } catch (error: unknown) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
         res.status(500).json({ message: errorMessage });

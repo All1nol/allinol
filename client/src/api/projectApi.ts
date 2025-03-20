@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { Task } from './taskApi';
 
 // Define the base URL for API calls
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
@@ -14,7 +15,7 @@ export interface Project {
   endDate: Date;
   owner: string;
   members?: string[];
-  tasks?: string[];
+  tasks?: Task[] | string[]; // Can be either Task objects or string IDs
   tags?: string[];
   createdAt?: Date;
   updatedAt?: Date;
@@ -74,7 +75,7 @@ export const deleteProject = async (id: string): Promise<{ message: string }> =>
   return response.data;
 };
 
-export const fetchProjectTasks = async (projectId: string): Promise<any[]> => {
+export const fetchProjectTasks = async (projectId: string): Promise<Task[]> => {
   const response = await projectApi.get(`/${projectId}/tasks`);
   return response.data;
 }; 

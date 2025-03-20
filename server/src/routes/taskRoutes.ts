@@ -6,7 +6,8 @@ import {
   updateTask,
   deleteTask,
   getTasksByCategory,
-  getTasksByStatus
+  getTasksByStatus,
+  getTasksByProject
 } from '../controllers/taskController';
 
 const router = express.Router();
@@ -14,22 +15,17 @@ const router = express.Router();
 // GET all tasks
 router.get('/', getTasks);
 
-// GET a single task by ID
-router.get('/:id', getTaskById);
+// Filter routes
+router.get('/category/:category', getTasksByCategory);
+router.get('/status/:status', getTasksByStatus);
+router.get('/project/:projectId', getTasksByProject);
 
-// POST a new task
+// CRUD operations
 router.post('/', createTask);
-
-// PUT update a task
 router.put('/:id', updateTask);
-
-// DELETE a task
 router.delete('/:id', deleteTask);
 
-// GET tasks by category
-router.get('/category/:category', getTasksByCategory);
-
-// GET tasks by status
-router.get('/status/:status', getTasksByStatus);
+// GET by ID (must be last to avoid conflicts with other routes)
+router.get('/:id', getTaskById);
 
 export default router; 

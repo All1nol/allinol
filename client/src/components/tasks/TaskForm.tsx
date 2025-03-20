@@ -203,6 +203,7 @@ export function TaskForm({ task, onClose }: TaskFormProps) {
         dueDate: task.dueDate,
         tags: task.tags || [],
         assignedTo: task.assignedTo,
+        projectId: task.projectId,
       });
     }
   }, [task, setValues]);
